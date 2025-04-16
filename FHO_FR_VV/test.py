@@ -1,10 +1,12 @@
+from math import factorial
+
 from levels import levels_e_ex
 from particles_data import *
 
 import numpy as np
 
-# print(levels_e_ex(CO, 1))
-# print(levels_e_ex(CO, 2))
+print(N2.ev_i)
+# print(levels_e_ex(N2, 2))
 
 # print(np.sqrt(-1))
 
@@ -24,4 +26,5 @@ import numpy as np
 
 # np.c_[EPS1[mask], EPS2[mask]]
 
-
+# print(factorial(4))
+print(np.absolute(3-4))
