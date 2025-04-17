@@ -34,8 +34,15 @@ print(integral2)
 print(integral3)
 
 x = [1.0, 2.0, -1.0, 0.0]
-x_array = np.array(x)
 
-print(np.where(x_array > 0, np.power(x_array, 1/2), 0.0))
+x_array1 = np.array(x)
+
+x_array2 = np.array(x)
+
+mask = x_array2 >= 0
+x_array2 = x_array2 * mask
+print(x_array2)
+
+print(np.where(x_array2 > 0, np.power(x_array2, 1/2), 0.0))
 # print(np.sqrt(0))
 

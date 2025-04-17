@@ -6,16 +6,16 @@ from scipy.special import factorial
 import numpy as np
 
 
-def gamma(eps1, eps2, y, v1, phi1, v2, phi2):
-    y_squared = y*y
-    threshold = (1 - y_squared) / (2 * (1 - y_squared / 2))
-    sum_eps = eps1 + eps2
-
-    condition = ((sum_eps < threshold) & (1 - y > 0))
-    gamma_values = np.where(condition, np.maximum(0, -0.5 * np.sin(2 * v1) * np.cos(phi1) * np.sqrt(eps1)
-                                                  - 0.5 * np.sin(2 * v2) * np.cos(phi2) * np.sqrt(eps2)
-                                                  + np.sqrt((1 - eps1 - eps2) * (1 - y))), 0.0)
-    return gamma_values
+# def gamma(eps1, eps2, y, v1, phi1, v2, phi2):
+#     y_squared = y*y
+#     threshold = (1 - y_squared) / (2 * (1 - y_squared / 2))
+#     sum_eps = eps1 + eps2
+#
+#     condition = ((sum_eps < threshold) & (1 - y > 0))
+#     gamma_values = np.where(condition, np.maximum(0, -0.5 * np.sin(2 * v1) * np.cos(phi1) * np.sqrt(eps1)
+#                                                   - 0.5 * np.sin(2 * v2) * np.cos(phi2) * np.sqrt(eps2)
+#                                                   + np.sqrt((1 - eps1 - eps2) * (1 - y))), 0.0)
+#     return gamma_values
 
 # безразмерная
 
@@ -25,7 +25,7 @@ def gamma(eps1, eps2, y, v1, phi1, v2, phi2):
 #                     np.maximum(0, -0.5 * np.sin(2 * v1) * np.cos(phi1) * np.sqrt(eps1)
 #                                - 0.5 * np.sin(2 * v2) * np.cos(phi2) * np.sqrt(eps2)
 #                                + np.sqrt((1 - eps1 - eps2) * (1 - y))), 0)
-
+#
 # def gamma(eps1, eps2, y, v1, phi1, v2, phi2):
 #     y_squared = y*y
 #     return np.where(eps1 + eps2 < (1 - y_squared) / (2 * (1 - y_squared / 2)),
@@ -33,11 +33,11 @@ def gamma(eps1, eps2, y, v1, phi1, v2, phi2):
 #                                - 0.5 * np.sin(2 * v2) * np.cos(phi2) * np.sqrt(eps2)
 #                                + np.power((1 - eps1 - eps2) * (1 - y), 1/2)), 0)
 
-# def gamma(eps1, eps2, y, v1, phi1, v2, phi2):
-#
-#     return np.maximum(0, -0.5 * np.sin(2 * v1) * np.cos(phi1) * np.sqrt(eps1)
-#                       - 0.5 * np.sin(2 * v2) * np.cos(phi2) * np.sqrt(eps2)
-#                       + np.sqrt((1 - eps1 - eps2) * (1 - y)))
+def gamma(eps1, eps2, y, v1, phi1, v2, phi2):
+
+    return np.maximum(0, -0.5 * np.sin(2 * v1) * np.cos(phi1) * np.sqrt(eps1)
+                      - 0.5 * np.sin(2 * v2) * np.cos(phi2) * np.sqrt(eps2)
+                      + np.sqrt((1 - eps1 - eps2) * (1 - y)))
 
 def g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u):
     return (np.power((np.cos(v1) * np.cos(phi1) * np.cos(v2) * np.cos(phi2)
