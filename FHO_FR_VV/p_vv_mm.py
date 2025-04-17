@@ -15,7 +15,7 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
     E = E * e_in_J
 
     if m1 == m2 and i1 == f2 and i2 == f1:
-        result = 0
+        raise ValueError("ksi = 0, resonance process")
 
     if method == 'simps':
         maxdiv = 12  # кол-во делений по координате: 18 (больше - много памяти)
@@ -46,8 +46,7 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
 
 
     if method == 'trapez':
-        maxdiv = 5  # кол-во делений по координате: 18 (больше - много памяти)
-        result = 0
+        maxdiv = 5  # макс. кол-во делений по координате: 18 (больше - много памяти)
 
         # пределы интегрирования
         eps1 = np.linspace(0, 1, maxdiv)
@@ -58,27 +57,48 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
         v2 = np.linspace(-pi/2, pi/2, maxdiv)
         phi2 = np.linspace(-pi/2, pi/2, maxdiv)
 
-        # сеткa
-        EPS1, EPS2, Y, V1, PHI1, V2, PHI2 = np.meshgrid(eps1, eps2, y, v1, phi1, v2, phi2) # indexing='ij'
+        EPS1, EPS2, Y, V1, PHI1, V2, PHI2 = np.meshgrid(eps1, eps2, y, v1, phi1, v2, phi2, indexing='ij')
 
-        mask = ((EPS1 + EPS2) <= (1-np.power(Y, 2))/(2*(1-np.power(Y, 2)/2)))
-        # mask = EPS1 + EPS2 <= 1
+        mask = (EPS1 + EPS2) <= (1-np.power(Y, 2))/(2*(1-np.power(Y, 2)/2))
 
-        # bad_points = np.where((1 - EPS1 - EPS2) * (1 - Y) < 0)
-        # if len(bad_points[0]) > 0:
-        #     print("Ошибка в точках:", bad_points)
-        #     print("Значения EPS1, EPS2, Y:", EPS1[bad_points], EPS2[bad_points], Y[bad_points])
+        #############################################
 
-        # вычисление значений функций на сетке
-        F = np.nan_to_num(p_vv(m1, m2, i1, f1, i2, f2, E, EPS1, EPS2, Y, V1, PHI1, V2, PHI2) * mask, nan=0.0)
+        EPS1_filtered = EPS1[mask]
+        EPS2_filtered = EPS2[mask]
+        Y_filtered = Y[mask]
+        V1_filtered = V1[mask]
+        PHI1_filtered = PHI1[mask]
+        V2_filtered = V2[mask]
+        PHI2_filtered = PHI2[mask]
+
+        F = p_vv(m1, m2, i1, f1, i2, f2, E, EPS1_filtered, EPS2_filtered, Y_filtered,
+                 V1_filtered, PHI1_filtered, V2_filtered, PHI2_filtered)
+
+        # print(F.shape)
+
+        F_ = np.zeros_like(EPS1)  # Исходная форма (maxdiv, maxdiv, maxdiv, maxdiv, maxdiv, maxdiv, maxdiv)
+        F_[mask] = F  #допустимые точки
+        F_ = np.nan_to_num(F_)
+
+        # print(F_.shape)
 
         result = trapezoid(trapezoid(trapezoid(trapezoid(trapezoid(trapezoid(trapezoid(
-            F, eps1, axis=6), eps2, axis=5), y, axis=4), v1, axis=3),
+            F_, eps1, axis=6), eps2, axis=5), y, axis=4), v1, axis=3),
             phi1, axis=2), v2, axis=1), phi2, axis=0)
 
-    return result
+        print(result)
 
-# obratnoe_m_in_J = 1.98e-23
+        #############################################################
+
+        # F = np.nan_to_num(p_vv(m1, m2, i1, f1, i2, f2, E, EPS1, EPS2, Y, V1, PHI1, V2, PHI2) * mask, nan=0.0)
+        #
+        # result = trapezoid(trapezoid(trapezoid(trapezoid(trapezoid(trapezoid(trapezoid(
+        #     F, eps1, axis=6), eps2, axis=5), y, axis=4), v1, axis=3),
+        #     phi1, axis=2), v2, axis=1), phi2, axis=0)
+        #
+        # print(result)
+
+    return result
 
 print(p_vv_int(CO, CO, 2, 0, 1, 3, 10000, 'trapez'))
 
