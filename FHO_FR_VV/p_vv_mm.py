@@ -9,41 +9,11 @@ from particles_data import *
 
 
 def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
-    # max_angle = pi  the upper limit of theta_v1 and phi1 angles integration
-
     e_in_J = h * c * 100
-    E = E * e_in_J
+    E = E * e_in_J   # 1/cm --> J
 
     if m1 == m2 and i1 == f2 and i2 == f1:
         raise ValueError("ksi = 0, resonance process")
-
-    if method == 'simps':
-        maxdiv = 12  # кол-во делений по координате: 18 (больше - много памяти)
-
-        # пределы интегрирования
-        eps1 = np.linspace(0, 1, maxdiv)
-        eps2 = np.linspace(0, 1, maxdiv)
-        y = np.linspace(0, 1, maxdiv)
-        v1 = np.linspace(-pi / 2, pi / 2, maxdiv)
-        phi1 = np.linspace(-pi / 2, pi / 2, maxdiv)
-        v2 = np.linspace(-pi / 2, pi / 2, maxdiv)
-        phi2 = np.linspace(-pi / 2, pi / 2, maxdiv)
-
-        # сеткa
-        EPS1, EPS2, Y, V1, PHI1, V2, PHI2 = np.meshgrid(eps1, eps2, y, v1, phi1, v2, phi2, indexing='ij')  # indexing='ij'
-
-        # вычисление значений функций на сетке
-        F = p_vv(m1, m2, i1, f1, i2, f2, E, EPS1, EPS2, Y, V1, PHI1, V2, PHI2)
-
-        integral = simpson(y=F, x=eps1, axis=0)
-        integral = simpson(y=integral, x=eps2, axis=0)
-        integral = simpson(y=integral, x=y, axis=0)
-        integral = simpson(y=integral, x=v1, axis=0)
-        integral = simpson(y=integral, x=phi1, axis=0)
-        integral = simpson(y=integral, x=v2, axis=0)
-        integral = simpson(y=integral, x=phi2, axis=0)
-        result = integral
-
 
     if method == 'trapez':
         maxdiv = 5  # макс. кол-во делений по координате: 18 (больше - много памяти)
@@ -77,7 +47,7 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
         # print(F.shape)
 
         F_ = np.zeros_like(EPS1)  # Исходная форма (maxdiv, maxdiv, maxdiv, maxdiv, maxdiv, maxdiv, maxdiv)
-        F_[mask] = F  #допустимые точки
+        F_[mask] = F  # допустимые точки
         F_ = np.nan_to_num(F_)
 
         # print(F_.shape)
@@ -86,7 +56,7 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
             F_, eps1, axis=6), eps2, axis=5), y, axis=4), v1, axis=3),
             phi1, axis=2), v2, axis=1), phi2, axis=0)
 
-        print(result)
+        # print(result)
 
         #############################################################
 
@@ -104,22 +74,13 @@ print(p_vv_int(CO, CO, 2, 0, 1, 3, 10000, 'trapez'))
 
 
 
-# print(p_vv_int(N2, N2, 1, 0, 2, 3, 10000*e_in_J, 'trapez'))
+# print(p_vv_int(N2, N2, 1, 0, 2, 3, 10000, 'trapez'))
 #
-# print(p_vv_int(N2, N2, 4, 2, 0, 3, 10000*e_in_J, 'trapez'))
+# print(p_vv_int(N2, N2, 4, 2, 0, 3, 10000, 'trapez'))
 #
-# print(p_vv_int(N2, N2, 5, 2, 0, 3, 10000*e_in_J, 'trapez'))
-# print(p_vv_int(N2, N2, 5, 1, 0, 4, 10000*e_in_J, 'trapez'))
-# print(p_vv_int(N2, N2, 6, 1, 0, 5, 10000*e_in_J, 'trapez'))
+# print(p_vv_int(N2, N2, 5, 2, 0, 3, 10000, 'trapez'))
+# print(p_vv_int(N2, N2, 5, 1, 0, 4, 10000, 'trapez'))
+# print(p_vv_int(N2, N2, 6, 1, 0, 5, 10000, 'trapez'))
 
-
-# print(p_vv_int(CO, CO, 2, 0, 1, 3, 100000, 'simps'))
-# print(p_vv_int(N2, N2, 1, 0, 2, 3, 100000, 'simps'))
-#
-# print(p_vv_int(N2, N2, 4, 2, 0, 3, 100000, 'simps'))
-#
-# print(p_vv_int(N2, N2, 5, 2, 0, 3, 100000, 'simps'))
-# print(p_vv_int(N2, N2, 5, 1, 0, 4, 100000, 'simps'))
-# print(p_vv_int(N2, N2, 6, 1, 0, 5, 100000, 'simps'))
 
 
