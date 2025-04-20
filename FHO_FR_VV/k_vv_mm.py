@@ -59,11 +59,16 @@ def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
 
     else:
         args = (m1, m2, i1, f1, i2, f2, T_inv_cm)
-        integral, error = quad(integrand, 0, np.inf, args=args)
+        result, error = quad(integrand, 0, np.inf, args=args)
+        # result, error = quad(integrand, 0, np.inf, args=(m1, m2, i1, f1, i2, f2, T_inv_cm))
 
-        # integral, error = quad(integrand, 0, np.inf, args=(m1, m2, i1, f1, i2, f2, T_inv_cm))
+        # maxdiv = 100
+        # x = np.linspace(0, np.inf, maxdiv)
+        # F = integrand(x, m1, m2, i1, f1, i2, f2, T_inv_cm)
+        # result = trapezoid(F, x, axis=0)
 
-        k_vv = np.pi * (r ** 2) * mean_u * integral
+
+        k_vv = np.pi * (r ** 2) * mean_u * result
 
         return k_vv
 
@@ -74,6 +79,6 @@ print(1e6 * k_vv_mm(N2, N2, 41, 40, 40, 41, 3000))  # cm^3 / s
 
 print(1e6 * k_vv_mm(N2, N2, 1, 3, 5, 3, 3000))  # cm^3 / s
 
-print(1e6 * k_vv_mm(N2, N2, 0, 3, 3, 1, 3000))  # cm^3 / s
-print(1e6 * k_vv_mm(N2, N2, 0, 3, 3, 0, 3000))  # cm^3 / s
+print(1e6 * k_vv_mm(N2, N2, 1, 3, 3, 1, 3000))  # cm^3 / s
+print(1e6 * k_vv_mm(N2, N2, 1, 4, 3, 0, 3000))  # cm^3 / s
 

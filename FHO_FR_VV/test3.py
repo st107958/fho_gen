@@ -14,6 +14,8 @@ e_in_J = h * c * 100
 
 data_s2 = pd.read_csv('fho_s2.csv', sep=';', header=None)
 data_s3 = pd.read_csv('fho_s3.csv', sep=';', header=None)
+data_matlab_s2 = pd.read_csv('matlab_s2.csv', sep=';', header=None)
+data_matlab_s3 = pd.read_csv('matlab_s3.csv', sep=';', header=None)
 
 x1 =[]
 y_s2 = []
@@ -40,6 +42,12 @@ fho_comp_s2.set_label('FHO-FR_comp_s2')
 
 fho_comp_s3, = ax.plot(data_s3[0], data_s3[1], '-s')
 fho_comp_s3.set_label('FHO-FR_comp_s3')
+
+# fho_matlab_s2, = ax.plot(data_matlab_s2[0], data_matlab_s2[1], '-^')
+# fho_matlab_s2.set_label('FHO-FR_matlab_s2')
+#
+# fho_matlab_s3, = ax.plot(data_matlab_s3[0], data_matlab_s3[1], '-^')
+# fho_matlab_s3.set_label('FHO-FR_matlab_s3')
 
 ax.set_yscale('log')
 plt.legend(frameon=False, framealpha=0, fontsize='small')

@@ -1,6 +1,7 @@
 from scipy.integrate import nquad, trapezoid
 from scipy.integrate import simpson
 import numpy as np
+np.set_printoptions(threshold=np.inf)
 import cupy as cp
 
 from constants import *
@@ -12,6 +13,8 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
     e_in_J = h * c * 100
     E = E * e_in_J   # 1/cm --> J
 
+    # print('E', E)
+
     if m1 == m2 and i1 == f2 and i2 == f1:
         raise ValueError("ksi = 0, resonance process")
 
@@ -22,15 +25,15 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
         eps1 = np.linspace(0, 1, maxdiv)
         eps2 = np.linspace(0, 1, maxdiv)
         y = np.linspace(0, 1, maxdiv)
-        v1 = np.linspace(-pi/2, pi/2, maxdiv)
-        phi1 = np.linspace(-pi/2, pi/2, maxdiv)
-        v2 = np.linspace(-pi/2, pi/2, maxdiv)
-        phi2 = np.linspace(-pi/2, pi/2, maxdiv)
+        v1 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
+        phi1 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
+        v2 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
+        phi2 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
 
         EPS1, EPS2, Y, V1, PHI1, V2, PHI2 = np.meshgrid(eps1, eps2, y, v1, phi1, v2, phi2, indexing='ij')
 
         mask = (EPS1 + EPS2) <= (1-np.power(Y, 2))/(2*(1-np.power(Y, 2)/2))
-
+        # mask = (EPS1 + EPS2) <= -1
         #############################################
 
         EPS1_filtered = EPS1[mask]
@@ -68,13 +71,15 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
         #
         # print(result)
 
+        result = result / pi ** 4
+
     return result
 
 print(p_vv_int(CO, CO, 2, 0, 1, 3, 10000, 'trapez'))
 
 
 
-# print(p_vv_int(N2, N2, 1, 0, 2, 3, 10000, 'trapez'))
+print(p_vv_int(N2, N2, 1, 0, 2, 3, 10000, 'trapez'))
 #
 # print(p_vv_int(N2, N2, 4, 2, 0, 3, 10000, 'trapez'))
 #

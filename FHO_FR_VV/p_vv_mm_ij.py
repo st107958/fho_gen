@@ -2,6 +2,7 @@ from constants import *
 
 import numpy as np
 from scipy.special import factorial
+from particles_data import *
 
 
 # def gamma(eps1, eps2, y, v1, phi1, v2, phi2):
@@ -49,10 +50,13 @@ def g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u):
 #                      * (1 / (omega1 * omega2)), 2))
 
 def p_vv(m1, m2, i1, f1, i2, f2, E, eps1, eps2, y, v1, phi1, v2, phi2):
-    # s = np.absolute(i1 - f1)
+    s_ = np.absolute(i1 - f1)
     s = np.absolute(i2 - f2)
 
-    m_r = (m1.mass*m2.mass)/(m1.mass+m2.mass)  # приведенная масса, kg
+    # if s_ != s:
+    #     raise ValueError('|i1 - f1| and |i2 - f2| are not equal')
+
+    m_r = (m1.mass*m2.mass)/(m1.mass+m2.mass)  # collision reduced mass, kg
     el_lvl = 1 - 1  # electronic level
 
     e1_1 = m1.ev_i[el_lvl][i1]  # initial state, J
@@ -65,10 +69,14 @@ def p_vv(m1, m2, i1, f1, i2, f2, E, eps1, eps2, y, v1, phi1, v2, phi2):
 
     u = np.sqrt(2*E/m_r)        # sqrt(J/kg)=sqrt(m^2/s^2)=m/s
 
-    ksi = (pi*(omega1 - omega2)) / (alpha*u)  # (1/s) / (1/m) / (m/s) = 1
+    ksi = (pi*(omega1 - omega2)) / (alpha * u)  # (1/s) / (1/m) / (m/s) = 1
 
     ns1 = np.power((factorial(max(i1, f1)) / factorial(min(i1, f1))), (1 / s))
     ns2 = np.power((factorial(max(i2, f2)) / factorial(min(i2, f2))), (1 / s))
+
+    # print('s:', s, 'mr:', m_r, e1_1, e1_2, e2_1, e2_2, omega1, omega2, 'u:', u, 'ksi:', ksi, ns1, ns2)
+    # print('gamma:', gamma(eps1, eps2, y, v1, phi1, v2, phi2), 'g:', g(y, eps1, eps2, v1, phi1,
+    #                                                                   v2, phi2, ksi, omega1, omega2, u))
 
     return (np.power(ns1*ns2*g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u), s)
             / (np.power(factorial(s), 2))
@@ -76,11 +84,13 @@ def p_vv(m1, m2, i1, f1, i2, f2, E, eps1, eps2, y, v1, phi1, v2, phi2):
                      - (np.power(ns1*g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u)/(s+1), 2)
                         / (s+2))))
 
-# print (g(0.2, 0.2, 0.2, pi/4, pi/4, pi/4, pi/4, -0.2053596293420575,
-#          425390684400060.25 , 650224277299828.6, 1400))
+print('G:', g(0.2, 0.2, 0.2, pi/4, pi/4, pi/4, pi/4, -0.2053596293420575,
+         425390684400060.25 , 650224277299828.6, 13000))
 
 
+print(gamma(0.2, 0.2, 0.2, pi/4, pi/4, pi/4, pi/4))
 
+print('pvv:', p_vv(N2, N2, 10, 0, 2, 12, 10000, 0.0, 0.0, 1, pi/4, pi/4, pi/4, pi/4))
 
 
 
