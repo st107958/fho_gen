@@ -26,7 +26,9 @@ from particles_data import *
 
 
 def gamma(eps1, eps2, y, v1, phi1, v2, phi2):
-
+    # print("v1 shape:", np.shape(v1))
+    # print("v2 shape:", np.shape(v2))
+    # print("eps1 shape:", np.shape(eps1))
     return np.maximum(0, -0.5 * np.sin(2 * v1) * np.cos(phi1) * np.sqrt(eps1)
                       - 0.5 * np.sin(2 * v2) * np.cos(phi2) * np.sqrt(eps2)
                       + np.sqrt((1 - eps1 - eps2) * (1 - y)))
@@ -34,6 +36,13 @@ def gamma(eps1, eps2, y, v1, phi1, v2, phi2):
 # безразмерная
 
 def g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u):
+    # print("v1 shape:", np.shape(v1))
+    # print("v2 shape:", np.shape(v2))
+    # print("eps1 shape:", np.shape(eps1))
+    # print(f"u shape: {u.shape}")
+    # print(f"ksi shape: {ksi.shape}")
+
+
     return (np.power((np.cos(v1) * np.cos(phi1) * np.cos(v2) * np.cos(phi2)
             * (gamma(eps1, eps2, y, v1, phi1, v2, phi2) * alpha * u * 0.5)), 2)
             * (1 / (omega1 * omega2)) * np.power((ksi / np.sinh(ksi)), 2))
@@ -78,19 +87,28 @@ def p_vv(m1, m2, i1, f1, i2, f2, E, eps1, eps2, y, v1, phi1, v2, phi2):
     # print('gamma:', gamma(eps1, eps2, y, v1, phi1, v2, phi2), 'g:', g(y, eps1, eps2, v1, phi1,
     #                                                                   v2, phi2, ksi, omega1, omega2, u))
 
+    # print(f"gamma shape: {gamma(eps1, eps2, y, v1, phi1, v2, phi2).shape}")
+    # # print(f"alpha shape: {alpha.shape}")
+    # print(f"u shape: {u.shape}")
+    # print(f"ksi shape: {ksi.shape}")
+    #
+    # print("ns1 shape:", np.shape(ns1))
+    # print("ns2 shape:", np.shape(ns2))
+    # print("s:", s, "type:", type(s), "shape:", np.shape(s) if hasattr(s, 'shape') else "scalar")
+
     return (np.power(ns1*ns2*g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u), s)
             / (np.power(factorial(s), 2))
             * np.exp(-(2*ns1*g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u) / (s+1))
                      - (np.power(ns1*g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u)/(s+1), 2)
                         / (s+2))))
 
-print('G:', g(0.2, 0.2, 0.2, pi/4, pi/4, pi/4, pi/4, -0.2053596293420575,
-         425390684400060.25 , 650224277299828.6, 13000))
-
-
-print(gamma(0.2, 0.2, 0.2, pi/4, pi/4, pi/4, pi/4))
-
-print('pvv:', p_vv(N2, N2, 10, 0, 2, 12, 10000, 0.0, 0.0, 1, pi/4, pi/4, pi/4, pi/4))
+# print('G:', g(0.2, 0.2, 0.2, pi/4, pi/4, pi/4, pi/4, -0.2053596293420575,
+#          425390684400060.25 , 650224277299828.6, 13000))
+#
+#
+# print(gamma(0.2, 0.2, 0.2, pi/4, pi/4, pi/4, pi/4))
+#
+# print('pvv:', p_vv(N2, N2, 10, 0, 2, 12, 10000, 0.0, 0.0, 1, pi/4, pi/4, pi/4, pi/4))
 
 
 

@@ -43,11 +43,11 @@ fho_comp_s2.set_label('FHO-FR_comp_s2')
 fho_comp_s3, = ax.plot(data_s3[0], data_s3[1], '-s')
 fho_comp_s3.set_label('FHO-FR_comp_s3')
 
-# fho_matlab_s2, = ax.plot(data_matlab_s2[0], data_matlab_s2[1], '-^')
-# fho_matlab_s2.set_label('FHO-FR_matlab_s2')
-#
-# fho_matlab_s3, = ax.plot(data_matlab_s3[0], data_matlab_s3[1], '-^')
-# fho_matlab_s3.set_label('FHO-FR_matlab_s3')
+fho_matlab_s2, = ax.plot(data_matlab_s2[0], data_matlab_s2[1], '-^')
+fho_matlab_s2.set_label('FHO-FR_matlab_s2')
+
+fho_matlab_s3, = ax.plot(data_matlab_s3[0], data_matlab_s3[1], '-^')
+fho_matlab_s3.set_label('FHO-FR_matlab_s3')
 
 ax.set_yscale('log')
 plt.legend(frameon=False, framealpha=0, fontsize='small')
