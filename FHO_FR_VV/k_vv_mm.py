@@ -1,5 +1,9 @@
+
 import numpy as np
+
 from scipy.integrate import quad
+# from mpmath import quad, inf
+
 from scipy.special import factorial
 from scipy.integrate import quadrature
 from scipy.integrate import romberg
@@ -8,17 +12,16 @@ import quadpy
 from p_vv_mm import *
 from constants import *
 
-def integrand(x_array, *args):
-    m1, m2, i1, f1, i2, f2, T_inv_cm = args
-
-    # print(x_array.shape)
-
-
-    results = np.zeros_like(x_array[0])
-    for idx, x in enumerate(x_array[0]):
-        E = x * T_inv_cm
-        results[idx] = np.nan_to_num(p_vv_int(m1, m2, i1, f1, i2, f2, E, 'trapez'), nan=0.0)
-    return np.power(x_array, 3) * results * np.exp(-x_array)
+# def integrand(x_array, *args):
+#     m1, m2, i1, f1, i2, f2, T_inv_cm = args
+#
+#     # print(x_array.shape)
+#
+#     results = np.zeros_like(x_array[0])
+#     for idx, x in enumerate(x_array[0]):
+#         E = x * T_inv_cm
+#         results[idx] = np.nan_to_num(p_vv_int(m1, m2, i1, f1, i2, f2, E, 'trapez'), nan=0.0)
+#     return np.power(x_array, 3) * results * np.exp(-x_array)
 
 # def integrand(E_array, m1, m2, i1, f1, i2, f2, T_inv_cm):
 #     # m1, m2, i1, f1, i2, f2, T_inv_cm = args
@@ -27,6 +30,80 @@ def integrand(x_array, *args):
 #     for idx, E in enumerate(E_array[0]):
 #         results[idx] = np.nan_to_num(p_vv_int(m1, m2, i1, f1, i2, f2, E, 'trapez'), nan=0.0)
 #     return np.power(E_array/T_inv_cm, 3) * results * np.exp(-E_array/T_inv_cm)
+
+def integrand(x_array, *args):
+    m1, m2, i1, f1, i2, f2, T_inv_cm = args
+
+    # print(x_array.shape)
+
+    x_array = np.atleast_1d(x_array)
+    results = np.zeros_like(x_array)
+    for idx, x in enumerate(x_array):
+        E = x * T_inv_cm
+        results[idx] = p_vv_int(m1, m2, i1, f1, i2, f2, E, 'trapez')
+    return np.power(x_array, 3) * results * np.exp(-x_array)
+
+# def integrand(E_array, m1, m2, i1, f1, i2, f2, T_inv_cm):
+#     # m1, m2, i1, f1, i2, f2, T_inv_cm = args
+#
+#     E_array = np.atleast_1d(E_array)
+#     results = np.zeros_like(E_array)
+#     for idx, E in enumerate(E_array):
+#         results[idx] = np.nan_to_num(p_vv_int(m1, m2, i1, f1, i2, f2, E, 'trapez'), nan=0.0)
+#     return np.power(E_array/T_inv_cm, 3) * results * np.exp(-E_array/T_inv_cm)
+
+# def find_adaptive_upper_limit(f, m1, m2, i1, f1, i2, f2, T_inv_cm, start=10, factor=1.5, eps=1e-4, max_limit=1e6, max_steps=50):
+#     E = start
+#     integral_estimate = 0
+#     prev_estimate = -np.inf
+#     steps = 0
+#
+#     while E < max_limit and steps < max_steps:
+#         val = f(E, m1, m2, i1, f1, i2, f2, T_inv_cm)
+#         if not np.isfinite(val):  # nan или inf
+#             break
+#         integral_estimate += val * (E / factor)  # прямоугольная аппроксимация
+#         rel_change = abs((integral_estimate - prev_estimate) / (prev_estimate + 1e-15))
+#         print(prev_estimate)
+#         if rel_change < eps:
+#             break
+#         prev_estimate = integral_estimate
+#         E *= factor
+#         steps += 1
+#
+#     return E
+
+def find_adaptive_upper_limit(f, m1, m2, i1, f1, i2, f2, T_inv_cm, start=10, factor=1.5, eps=1e-4, max_limit=1e6,
+                              max_steps=50):
+    E = start
+    integral_estimate = 0
+    prev_estimate = 0  # Инициализируем нулем вместо -inf
+    steps = 0
+
+    while E < max_limit and steps < max_steps:
+        val = f(E, m1, m2, i1, f1, i2, f2, T_inv_cm)
+        if not np.isfinite(val):  # nan или inf
+            break
+        integral_estimate += val * (E / factor)  # прямоугольная аппроксимация
+
+        # Печатаем предыдущее значение после обновления
+        print(f"Step {steps}, E = {E}, prev_estimate = {prev_estimate}")
+
+        # Проверяем, не слишком ли мал prev_estimate для сравнения
+        if abs(prev_estimate) > 1e-10:
+            rel_change = abs((integral_estimate - prev_estimate) / prev_estimate)
+        else:
+            rel_change = eps * 2  # принудительно продолжаем, если prev_estimate близок к 0
+
+        if rel_change < eps and steps > 0:  # Добавляем steps > 0 чтобы не останавливаться на первой итерации
+            break
+
+        prev_estimate = integral_estimate
+        E *= factor
+        steps += 1
+
+    return E
+
 
 # def E_coll(E, *args):
 #     m1, m2, i1, f1, i2, f2, T_inv_cm = args
@@ -61,6 +138,7 @@ def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
 
     mean_u = np.sqrt(8 * k * T_K / (np.pi * m_red))  # m/s
 
+
     if m1 == m2 and i1 == f2 and i2 == f1:
 
         s = np.absolute(i2 - f2)
@@ -74,7 +152,8 @@ def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
         ns1 = np.power((factorial(max(i1, f1)) / factorial(min(i1, f1))), (1 / s))
         ns2 = np.power((factorial(max(i2, f2)) / factorial(min(i2, f2))), (1 / s))
 
-        z = 3 * pi * np.power(r, 2) * mean_u
+        z = 3 * pi * np.power(r, 2) * mean_u # m^3/s
+        # z = 3 * np.power(r, 2) * mean_u  # m^3/s
 
         f = ((np.power((1 + (1 / np.power(2, s-1))), 4) * factorial(s+3))
              / (np.power(2, s+8) * np.power(s+1, 2) * factorial(3)))
@@ -84,13 +163,14 @@ def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
         result = (z * f * np.power(ns1 * ns2 * f_2, s) / np.power(factorial(s), 2)
                   / np.power((1 + ((2 * ns1 * ns2 * f * f_2) / (s + 1))), s+4))
 
-        return result
+        return result*1e6 # sm^3/s
 
     else:
-        # args = (m1, m2, i1, f1, i2, f2, T_inv_cm)
-        # result, error = quad(integrand, 0, np.inf, args=args, epsabs=1e-7, epsrel=1e-7, limit=100)
-        # print(error)
+        args = (m1, m2, i1, f1, i2, f2, T_inv_cm)
+        result, error = quad(integrand, 0, np.inf, args=args, epsabs=1e-10, epsrel=1e-10, limit=100)
+        print(error)
 
+        # result, error = quadpy.quad(integrand, 0, np.inf, args=args)
 
         # E_max = find_adaptive_upper_limit(integrand, m1, m2, i1, f1, i2, f2, T_inv_cm)
         #
@@ -100,13 +180,13 @@ def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
         #     [0, E_max]  # Пределы интегрирования (верхний предел вместо бесконечности)
         # )
 
-        scheme = quadpy.e1r.gauss_laguerre(300, alpha=1.5)
-        result = scheme.integrate(lambda E: integrand(E, m1, m2, i1, f1, i2, f2, T_inv_cm))
+        # scheme = quadpy.e1r.gauss_laguerre(50, alpha=0)
+        # result = scheme.integrate(lambda E: integrand(E, m1, m2, i1, f1, i2, f2, T_inv_cm))
 
         # scheme = quadpy.c1.gauss_kronrod(100)
         # result = scheme.integrate(
         #     lambda E: integrand(E, m1, m2, i1, f1, i2, f2, T_inv_cm),
-        #     [0, 120000000]  # Пределы интегрирования (верхний предел вместо бесконечности)
+        #     [0, 80*T_inv_cm]  # Пределы интегрирования (верхний предел вместо бесконечности)
         # )
 
         # result1 = quad(integrand, 0, 1e10, args=args)
@@ -115,14 +195,8 @@ def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
 
         # result = quadrature(integrand, 0, 1e5, args=args)[0]
 
-        # maxdiv = 2560
-        # x = np.linspace(0, np.inf, maxdiv)
-        # F = integrand(x, m1, m2, i1, f1, i2, f2, T_inv_cm)
-        # result = trapezoid(F, x, axis=0)
-
-
-        # k_vv = np.pi * (r ** 2) * mean_u * result * 1e6 #sm^3/s
         k_vv = np.pi * (r ** 2) * mean_u * result * 1e6  # sm^3/s
+        #k_vv = (r ** 2) * mean_u * result * 1e6  # sm^3/s
 
         return k_vv
 

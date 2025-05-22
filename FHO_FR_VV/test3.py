@@ -19,15 +19,21 @@ data_matlab_s3 = pd.read_csv('matlab_s3.csv', sep=';', header=None)
 
 x1 =[]
 y_s2 = []
-for i in range(3, 40, 2):
+for i in range(3, 40, 4):
     x1.append(i)
-    y_s2.append(p_vv_int(N2, N2, i, i-s2, 0, s2, 10000, 'trapez'))
+    print('x1:', i)
+    y = p_vv_int(N2, N2, i, i-s2, 0, s2, 10000, 'trapez')
+    y_s2.append(y)
+    print('y1:', y)
 
 x2 =[]
 y_s3 = []
-for i in range(4, 42, 2):
+for i in range(4, 42, 4):
     x2.append(i)
-    y_s3.append(p_vv_int(N2, N2, i, i-s3, 0, s3, 10000, 'trapez'))
+    print('x2:', i)
+    y = p_vv_int(N2, N2, i, i-s3, 0, s3, 10000, 'trapez')
+    y_s3.append(y)
+    print('y2:', y)
 
 fig, ax = plt.subplots()
 
