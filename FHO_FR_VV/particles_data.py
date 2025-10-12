@@ -1,4 +1,4 @@
-from levels import levels_e_ex
+from FHO_FR_VV.levels import levels_e_ex
 import numpy as np
 
 class particle:
@@ -65,3 +65,40 @@ N2.add_ev_i(e_i-e_i[0])
 # m2 = N2
 #
 # print(m1 == m2)
+
+
+class VSSData:
+    def __init__(self, dref, Tref, omega):
+        self.dref = dref  # Reference diameter, m
+        self.Tref = Tref  # Reference temperature, K
+        self.omega = omega  # Viscosity temperature exponent
+
+    def __repr__(self):
+        return f"VSS_data(dref={self.dref:.3e} m, Tref={self.Tref} K, omega={self.omega})"
+
+
+# База данных параметров VSS
+VSS_DATABASE = {
+    "N2-N2": VSSData(dref=4.04e-10, Tref=273, omega=0.686),
+    "N2-O2": VSSData(dref=3.604e-10, Tref=273, omega=0.703),
+    "N2-NO": VSSData(dref=4.391e-10, Tref=273, omega=0.756),
+    "N2-N": VSSData(dref=4.088e-10, Tref=273, omega=0.762),
+    "N2-O": VSSData(dref=3.222e-10, Tref=273, omega=0.702),
+    "O2-N2": VSSData(dref=3.604e-10, Tref=273, omega=0.703),
+    "O2-O2": VSSData(dref=3.896e-10, Tref=273, omega=0.7),
+    "O2-NO": VSSData(dref=4.054e-10, Tref=273, omega=0.718),
+    "O2-N": VSSData(dref=3.721e-10, Tref=273, omega=0.757),
+    "O2-O": VSSData(dref=3.734e-10, Tref=273, omega=0.76),
+    "NO-N2": VSSData(dref=4.391e-10, Tref=273, omega=0.756),
+    "NO-O2": VSSData(dref=4.054e-10, Tref=273, omega=0.718),
+    "NO-NO": VSSData(dref=4.218e-10, Tref=273, omega=0.737),
+    "NO-N": VSSData(dref=4.028e-10, Tref=273, omega=0.788),
+    "NO-O": VSSData(dref=3.693e-10, Tref=273, omega=0.752)
+}
+
+
+# Функция для получения параметров
+def get_vss_data(collision_pair):
+    """Get VSS parameters for collision pair"""
+    key = f"{collision_pair.particle1.name}-{collision_pair.particle2.name}"
+    return VSS_DATABASE.get(key)

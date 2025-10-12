@@ -9,11 +9,10 @@ eV_to_J = 1.60217e-19
 inv_J_to_m = 5.034e24
 inv_m_in_J = 1.98e-23
 
-A = 1730 * eV_to_J             #J
+#A = 1730 * eV_to_J             #J
 alpha = 4e10              #FHO parameter, 1/m
 h_red = h / (2*pi)        #reduced Plank constant, J*s
 
-# A = 1730 # eV
 # print('h_red =', h_red)
 
 

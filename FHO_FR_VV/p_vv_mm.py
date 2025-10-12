@@ -1,15 +1,16 @@
 from scipy.integrate import nquad, trapezoid
 from scipy.integrate import simpson
 import numpy as np
+import time
 
 from numba import cuda
 
 #np.set_printoptions(threshold=np.inf)
 import cupy as cp
 
-from constants import *
-from p_vv_mm_ij import p_vv, g, gamma
-from particles_data import *
+from FHO_FR_VV.constants import *
+from FHO_FR_VV.p_vv_mm_ij import p_vv, g, gamma
+from FHO_FR_VV.particles_data import *
 
 # threads_per_block = 256
 # blocks_per_grid = 65535
@@ -167,8 +168,28 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
         #     phi1, axis=2), v2, axis=1), phi2, axis=0)
 
         #2
-
-
+        # print('ВЫчисление')
+        # start_time = time.time_ns()
+        # def integrand(eps1, eps2, y, v1, phi1, v2, phi2):
+        #     # Здесь должна быть ваша функция p_vv, возвращающая значение подынтегрального выражения
+        #     return p_vv(m1, m2, i1, f1, i2, f2, E, eps1, eps2, y, v1, phi1, v2, phi2)
+        #
+        #
+        # ranges = [
+        #     (0, 0.5),  # eps1 (верхний предел 0.5 из-за условия eps1 + eps2 <= 0.5)
+        #     (0, 0.5),  # eps2
+        #     (0, 1),  # y
+        #     (-np.pi / 2, np.pi / 2),  # v1
+        #     (-np.pi / 2, np.pi / 2),  # phi1
+        #     (-np.pi / 2, np.pi / 2),  # v2
+        #     (-np.pi / 2, np.pi / 2)  # phi2
+        # ]
+        #
+        # # Вычисляем интеграл с адаптацией
+        # result, error = nquad(integrand, ranges)
+        #
+        # end_time = time.time_ns()
+        # print((end_time - start_time) * 1e-9)
 
         #3
 
@@ -202,7 +223,7 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
 
     return result
 
-# print(p_vv_int(CO, CO, 2, 0, 1, 3, 10000, 'trapez'))
+print(p_vv_int(CO, N2, 1, 1, 1, 1, 10000, 'trapez'))
 #
 #
 #

@@ -1,10 +1,10 @@
-from FHO_FR_VV.constants import *
+from fho_fr_test.constants import *
 
 import numpy as np
 
 
 from scipy.special import factorial
-from FHO_FR_VV.particles_data import *
+from fho_fr_test.particles_data import *
 
 
 # def gamma(eps1, eps2, y, v1, phi1, v2, phi2):

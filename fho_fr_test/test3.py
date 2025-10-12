@@ -1,6 +1,6 @@
-from p_vv_mm import p_vv_int
-from particles_data import *
-from constants import *
+from fho_fr_test.p_vv_test import p_vv_int
+from fho_fr_test.particles_data import *
+from fho_fr_test.constants import *
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -38,32 +38,28 @@ for i in range(4, 42, 4):
 fig, ax = plt.subplots()
 
 fho_s2, = ax.plot(x1, y_s2, '-P')
-fho_s2.set_label('FHO-FR, numerical calculation, s=2, E=1e-4 cm^-1')
+fho_s2.set_label('FHO-FR_s2')
 
 fho_s3, = ax.plot(x2, y_s3, '-P')
-fho_s3.set_label('FHO-FR, numerical calculation, s=3, E=1e-4 cm^-1')
+fho_s3.set_label('FHO-FR_s3')
 
 fho_comp_s2, = ax.plot(data_s2[0], data_s2[1], '-s')
-fho_comp_s2.set_label('FHO-FR, analytic model, s=2, E=1e-4 cm^-1')
+fho_comp_s2.set_label('FHO-FR_comp_s2')
 
 fho_comp_s3, = ax.plot(data_s3[0], data_s3[1], '-s')
-fho_comp_s3.set_label('FHO-FR, analytic model, s=3, E=1e-4 cm^-1')
+fho_comp_s3.set_label('FHO-FR_comp_s3')
 
-# fho_matlab_s2, = ax.plot(data_matlab_s2[0], data_matlab_s2[1], '-^')
-# fho_matlab_s2.set_label('FHO-FR_matlab_s2')
-#
-# fho_matlab_s3, = ax.plot(data_matlab_s3[0], data_matlab_s3[1], '-^')
-# fho_matlab_s3.set_label('FHO-FR_matlab_s3')
+fho_matlab_s2, = ax.plot(data_matlab_s2[0], data_matlab_s2[1], '-^')
+fho_matlab_s2.set_label('FHO-FR_matlab_s2')
+
+fho_matlab_s3, = ax.plot(data_matlab_s3[0], data_matlab_s3[1], '-^')
+fho_matlab_s3.set_label('FHO-FR_matlab_s3')
 
 ax.set_yscale('log')
 plt.legend(frameon=False, framealpha=0, fontsize='small')
 
 # ax.set_xlim(0.2e-7, 1e-2)
 # ax.set_ylim(1e-9, 1)
-ax.set_xlabel(r'$\mathrm{i, \ vibrational \ quantum \ number}$')
-ax.set_ylabel(r'$\mathrm{V-V \ Probability}$')
-# plt.grid(True)
-
-fig.savefig('plot_VV_prob.png', dpi=600)
-
+ax.set_xlabel(r'$\mathrm{i}$')
+ax.set_ylabel(r'$\mathrm{P}$')
 plt.show()

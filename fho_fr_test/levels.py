@@ -1,4 +1,4 @@
-from FHO_FR_VV.constants import *
+from fho_fr_test.constants import *
 import numpy as np
 
 

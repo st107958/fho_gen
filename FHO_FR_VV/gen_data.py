@@ -1,7 +1,7 @@
-from p_vv_mm import p_vv_int
-from k_vv_mm import k_vv_mm
-from particles_data import *
-from constants import *
+from FHO_FR_VV.p_vv_mm import p_vv_int
+from FHO_FR_VV.k_vv_mm import k_vv_mm
+from FHO_FR_VV.particles_data import *
+from FHO_FR_VV.constants import *
 
 import matplotlib.pyplot as plt
 import pandas as pd

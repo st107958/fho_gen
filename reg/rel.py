@@ -33,11 +33,16 @@ def rel_times(temperature: np.array, coefficient: np.array, molecule: str):
 
 
 T_data = np.loadtxt('T1.csv')
-k_data = np.loadtxt('K1.csv')
-pt_T_array_fho = np.array(rel_times(T_data, k_data, molecule))
+k_data1 = np.loadtxt('K1.csv')
+k_data2 = np.loadtxt('K2.csv')
+pt_T_array_fho1 = np.array(rel_times(T_data, k_data1, molecule))
+pt_T_array_fho2 = np.array(rel_times(T_data, k_data2, molecule))
 
 
 
 filename = 'FHO_FR1.csv' #тут
-np.savetxt(filename, pt_T_array_fho)
+np.savetxt(filename, pt_T_array_fho1)
+
+filename = 'FHO_FR2.csv' #тут
+np.savetxt(filename, pt_T_array_fho2)
 
