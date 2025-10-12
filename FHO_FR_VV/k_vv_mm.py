@@ -3,7 +3,7 @@ import numpy as np
 
 from scipy.integrate import quad
 
-from scipy.special import factorial
+from scipy.special import factorial, gamma
 from FHO_FR_VV.p_vv_mm import *
 from FHO_FR_VV.constants import *
 
