@@ -39,8 +39,8 @@ N2.num_elex_levels = 1                     # number of electronical levels
 N2.num_vibr_levels = [47]                  # number of vibrational levels
 N2.mass = 4.651236272601599e-26            # molecular mass, kg
 N2.diameter = 3.4039e-10                   # m
-N2.we = [235857]                           # DB, 1/m
-N2.wexe = [1432]
+N2.we = [235960]                           # DB, 1/m
+N2.wexe = [1445.6]
 N2.weye = [-0.226]
 
 e_i = levels_e_ex(N2, 0)

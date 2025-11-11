@@ -74,6 +74,8 @@ fho_comp_s4.set_label('FHO-FR, (1, i-1 --> 0, i), T = 3000K')
 # fho_reg.set_label('FHOreg')
 
 # fho_matlab_3000, = ax.plot(data_matlab_3000[0], data_matlab_3000[1], '-^')
+
+
 # fho_matlab_3000.set_label('FHO-FR_matlab_s2')
 
 # fho_matlab_s3, = ax.plot(data_matlab_s3[0], data_matlab_s3[1], '-^')

@@ -129,7 +129,7 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
 
     return result
 
-print(p_vv_int(CO, N2, 1, 1, 1, 1, 10000, 'trapez'))
+# print(p_vv_int(CO, N2, 1, 1, 1, 1, 10000, 'trapez'))
 #
 #
 #

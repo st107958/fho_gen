@@ -7,21 +7,48 @@ from scipy.special import factorial, gamma
 from FHO_FR_VV.p_vv_mm import *
 from FHO_FR_VV.constants import *
 
-def get_crossection_VSS(velocity: float, collision_reduced_mass: float, VSS_data: VSSData):
-    gref = np.sqrt(2 * k * VSS_data.Tref / collision_reduced_mass) # Reference velocity, m/s
-    return np.pi * VSS_data.dref**2 * (velocity / gref) ** (1 - 2 * VSS_data.omega) / gamma(2.5 - VSS_data.omega)
+# def get_crossection_VSS(velocity: float, collision_reduced_mass: float, VSS_data: VSSData):
+#     gref = np.sqrt(2 * k * VSS_data.Tref / collision_reduced_mass) # Reference velocity, m/s
+#     return np.pi * VSS_data.dref**2 * (velocity / gref) ** (1 - 2 * VSS_data.omega) / gamma(2.5 - VSS_data.omega)
 
-def integrand(x_array, *args):
+# def integrand(x_array, *args):
+#     m1, m2, i1, f1, i2, f2, T_inv_cm = args
+#
+#     # print(x_array.shape)
+#
+#     x_array = np.atleast_1d(x_array)
+#     results = np.zeros_like(x_array)
+#     for idx, x in enumerate(x_array):
+#         E = x * T_inv_cm
+#         results[idx] = p_vv_int(m1, m2, i1, f1, i2, f2, E, 'trapez')
+#     return results * np.exp(-x_array) * np.power(x_array, 3)
+
+
+def integrand(x, *args):
     m1, m2, i1, f1, i2, f2, T_inv_cm = args
 
-    # print(x_array.shape)
+    E = x * T_inv_cm
+    pvv_result = p_vv_int(m1, m2, i1, f1, i2, f2, E, 'trapez')
 
-    x_array = np.atleast_1d(x_array)
-    results = np.zeros_like(x_array)
-    for idx, x in enumerate(x_array):
-        E = x * T_inv_cm
-        results[idx] = p_vv_int(m1, m2, i1, f1, i2, f2, E, 'trapez')
-    return np.power(x_array, 3) * results * np.exp(-x_array)
+    return pvv_result * np.exp(-x) * np.power(x, 3)
+
+
+# def integrand1(x_array, *args):
+#     m1, m2, i1, f1, i2, f2, T_inv_cm = args
+#
+#     m = (m1.mass * m2.mass) / (m1.mass + m2.mass)
+#     x_array = np.atleast_1d(x_array)
+#     probability = np.zeros_like(x_array)
+#     crossection = np.zeros_like(x_array)
+#
+#     for idx1, x1 in enumerate(x_array):
+#         E = np.power(x1, 2) * m / 2
+#         probability[idx1] = p_vv_int(m1, m2, i1, f1, i2, f2, E, 'trapez')
+#
+#     for idx2, x2 in enumerate(x_array):
+#         crossection[idx2] = get_crossection_VSS(x2, m)
+#
+#     return crossection * probability * np.exp(-np.power(x_array, 2) * m / 2 * k * T_inv_cm) * x_array
 
 
 def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
@@ -63,15 +90,17 @@ def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
 
     else:
         args = (m1, m2, i1, f1, i2, f2, T_inv_cm)
+        args1 = (m1, m2, i1, f1, i2, f2, T_K)
         result, error = quad(integrand, 0, np.inf, args=args, epsabs=1e-15, limit=1000)
+        #result1, error1 = quad(integrand1, 0, np.inf, args=args1, epsabs=1e-15, limit=1000)
         # print(error)
 
         # result1 = quad(integrand, 0, 1e10, args=args)
         # result2 = quad(integrand, 1e6, np.inf, args=args)[0]
         # result = result1 + result2
 
-        k_vv = np.pi * (r ** 2) * mean_u * result * 1e6 / 2  # sm^3/s
-        # k_vv = (r ** 2) * mean_u * result * 1e6 / 2  # sm^3/s
+        k_vv = np.pi * (r ** 2) * mean_u * result * 1e6  # sm^3/s
+        #k_vv = np.pi * (r ** 2) * mean_u * result * 1e6   # sm^3/s
 
         return k_vv
 
