@@ -44,8 +44,12 @@ def g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u):
     # print(f"u shape: {u.shape}")
     # print(f"ksi shape: {ksi.shape}")
 
-
     # print(np.max(ksi), np.min(ksi))
+
+    if ksi == 0:
+        return (np.power((np.cos(v1) * np.cos(phi1) * np.cos(v2) * np.cos(phi2)
+                          * (gamma(eps1, eps2, y, v1, phi1, v2, phi2) * alpha * u * 0.5)), 2)
+                * (1 / (omega1 * omega2)))
 
     return (np.power((np.cos(v1) * np.cos(phi1) * np.cos(v2) * np.cos(phi2)
             * (gamma(eps1, eps2, y, v1, phi1, v2, phi2) * alpha * u * 0.5)), 2)

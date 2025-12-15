@@ -18,11 +18,11 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
 
     # print('E', E)
 
-    if m1 == m2 and i1 == f2 and i2 == f1:
-        raise ValueError("ksi = 0, resonance process")
+    # if m1 == m2 and i1 == f2 and i2 == f1:
+    #     raise ValueError("ksi = 0, resonance process")
 
     if method == 'trapez':
-        maxdiv = 5  # макс. кол-во делений по координате: 18 (больше - много памяти)
+        maxdiv = 9  # макс. кол-во делений по координате: 18 (больше - много памяти)
 
         # пределы интегрирования
         eps1 = np.linspace(0, 1, maxdiv)
@@ -133,7 +133,7 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
 #
 #
 #
-# print(p_vv_int(N2, N2, 1, 0, 2, 3, 10000, 'trapez'))
+# print(p_vv_int(N2, N2, 1, 0, 0, 1, 10000, 'trapez'))
 #
 # print(p_vv_int(N2, N2, 4, 2, 0, 3, 10000, 'trapez'))
 #
