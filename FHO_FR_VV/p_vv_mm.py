@@ -22,7 +22,7 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
     #     raise ValueError("ksi = 0, resonance process")
 
     if method == 'trapez':
-        maxdiv = 9  # макс. кол-во делений по координате: 18 (больше - много памяти)
+        maxdiv = 5  # макс. кол-во делений по координате: 18 (больше - много памяти)
 
         # пределы интегрирования
         eps1 = np.linspace(0, 1, maxdiv)

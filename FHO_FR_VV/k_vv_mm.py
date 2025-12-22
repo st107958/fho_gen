@@ -57,7 +57,7 @@ def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
 
     m_red = (m1.mass * m2.mass) / (m1.mass + m2.mass)  # приведенная масса, kg
     r = (m1.diameter + m2.diameter) / 2  # collision diameter
-    print(r)
+    # print(r)
 
     mean_u = np.sqrt(8 * k * T_K / (np.pi * m_red))  # m/s
 

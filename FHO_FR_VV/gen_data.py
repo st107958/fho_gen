@@ -6,32 +6,36 @@ from FHO_FR_VV.constants import *
 import matplotlib.pyplot as plt
 import pandas as pd
 
+import time
+
 E = 1000000  # 1/m
-# e_in_J = 1.98e-23 # E: 1/cm --> J (h * c * 100)
 e_in_J = h * c * 100
 
 
 n_points = 24
-T_min, T_max = 300, 30000  # Диапазон 300–32000 K
+T_min, T_max = 500, 16000  # Диапазон
 T_data = np.linspace(T_min**(-1/3), T_max**(-1/3), n_points) ** (-3)
 
 
-K_data = []
-for i in range(len(T_data)):
-    k = k_vv_mm(N2, N2, 1, 0, 0, 1, T_data[i])
-    K_data.append(k)
-    print('k:', k)
+df_k = pd.DataFrame()
 
-df = pd.DataFrame({'T': T_data})
-df.to_csv('T.csv', index=False, header=False)
+start_time = time.time()
 
-df = pd.DataFrame({'K': K_data})
-df.to_csv('K.csv', index=False, header=False)
+for j in range(1, 10):
+    column_values = []
+    for i in range(len(T_data)):
+        k = k_vv_mm(N2, N2, 41, 40, j - 1, j, T_data[i])
+        column_values.append(k)
 
-# with open('data/K.csv', 'w', encoding='utf-8') as file:
-#     for num in K_data:
-#         file.write(f"{num}\n")
-#
-# with open('data/T.csv', 'w', encoding='utf-8') as file:
-#     for num in T_data:
-#         file.write(f"{num}\n")
+    df_k[f'j_{j}'] = column_values
+
+end_time = time.time()
+execution_time = end_time - start_time
+print(f"Время выполнения: {execution_time:.4f} секунд")
+
+df_k.insert(0, 'Temperature', T_data)
+
+# print(df_k.head())
+
+df_k.to_csv('N2.csv', index=False, header=False)
+
