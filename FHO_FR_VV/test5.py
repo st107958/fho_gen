@@ -24,7 +24,7 @@ data_matlab_3000 = pd.read_csv('matlab_3000.csv', sep=';', header=None)
 
 x1 =[]
 y_1 = []
-for i in range(1, 42, 1):
+for i in range(1, 42, 4):
     x1.append(i)
     print('x1:', i)
     y = k_vv_mm(N2, N2, 41, 40, i-1, i, 3000)
@@ -33,7 +33,7 @@ for i in range(1, 42, 1):
 
 x2 =[]
 y_2 = []
-for i in range(10, 42, 1):
+for i in range(10, 42, 4):
     x2.append(i)
     print('x2:', i)
     y = k_vv_mm(N2, N2, 41, 40, i-1, i, 300)
@@ -42,7 +42,7 @@ for i in range(10, 42, 1):
 
 x3 =[]
 y_3 = []
-for i in range(1, 42, 1):
+for i in range(1, 42, 4):
     x3.append(i)
     print('x3:', i)
     y = k_vv_mm(N2, N2, 1, 0, i-1, i, 3000)
@@ -51,22 +51,22 @@ for i in range(1, 42, 1):
 
 fig, ax = plt.subplots()
 
-fho_s2, = ax.plot(x1, y_1, '-P')
+fho_s2, = ax.plot(x1, y_1, '-o', markersize=5)
 fho_s2.set_label('FHO-FR, code (41, i-1 --> 40, i), T = 3000K')
 
-fho_s3, = ax.plot(x2, y_2, '-P')
+fho_s3, = ax.plot(x2, y_2, '-^', markersize=5)
 fho_s3.set_label('FHO-FR, code (41, i-1 --> 40, i), T = 300K')
 
-fho_s4, = ax.plot(x3, y_3, '-P')
+fho_s4, = ax.plot(x3, y_3, '-p', markersize=5)
 fho_s4.set_label('FHO-FR, code (1, i-1 --> 0, i), T = 3000K')
 
-fho_comp_s2, = ax.plot(data_1[0], data_1[1], '-')
+fho_comp_s2, = ax.plot(data_1[0], data_1[1], '--')
 fho_comp_s2.set_label('FHO-FR, article (41, i-1 --> 40, i), T = 3000K')
 
-fho_comp_s3, = ax.plot(data_2[0], data_2[1], '-')
+fho_comp_s3, = ax.plot(data_2[0], data_2[1], '--')
 fho_comp_s3.set_label('FHO-FR, article (41, i-1 --> 40, i), T = 300K')
 
-fho_comp_s4, = ax.plot(data_3[0], data_3[1], '-')
+fho_comp_s4, = ax.plot(data_3[0], data_3[1], '--')
 fho_comp_s4.set_label('FHO-FR, article (1, i-1 --> 0, i), T = 3000K')
 
 # iii = [i for i in range(0, 40)]
@@ -82,12 +82,14 @@ fho_comp_s4.set_label('FHO-FR, article (1, i-1 --> 0, i), T = 3000K')
 # fho_matlab_s3.set_label('FHO-FR_matlab_s3')
 
 ax.set_yscale('log')
-plt.legend(frameon=False, framealpha=0, fontsize='small')
+plt.legend(frameon=True, framealpha=0.5, fontsize='x-small')
 
 # ax.set_xlim(0.2e-7, 1e-2)
 # ax.set_ylim(1e-9, 1)
 ax.set_xlabel(r'$\mathrm{i, \ vibrational \ quantum \ number}$')
-ax.set_ylabel(r'$\mathrm{k_{vv} \ Rate \ constant, \ cm^3/s}$')
+ax.set_ylabel(r'$\mathrm{k_{vv} (T), \ cm^3/s}$')
+
+plt.grid(True, linestyle='--')
 
 fig.savefig('plot_VV_rate.png', dpi=600)
 plt.show()

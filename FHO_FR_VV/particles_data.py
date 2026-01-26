@@ -47,6 +47,22 @@ e_i = levels_e_ex(N2, 0)
 N2.add_ev_i(e_i-e_i[0])
 
 
+O2 = particle()
+O2.num_elex_levels = 1                     # number of electronic levels
+O2.num_vibr_levels = [42]                  # number of vibrational levels (обычно ~40–45)
+O2.mass = 5.313525e-26                     # molecular mass, kg
+O2.diameter = 3.46e-10                     # m
+
+# Vibrational constants for O2 (ground electronic state)
+O2.we = [158000]                           # 1/m  (≈ 1580 cm^-1)
+O2.wexe = [1198]                           # 1/m  (≈ 11.98 cm^-1)
+O2.weye = [-3.0]                           # 1/m  (малый третий член, часто отрицательный)
+
+e_i_O2 = levels_e_ex(O2, 0)
+O2.add_ev_i(e_i_O2 - e_i_O2[0])
+
+
+
 
 # print(N2.mass)
 # print(e_i)
@@ -67,28 +83,3 @@ N2.add_ev_i(e_i-e_i[0])
 # m2 = N2
 #
 # print(m1 == m2)
-
-
-
-
-# class VSSData:
-#     def __init__(self, dref, Tref, omega):
-#         self.dref = dref  # Reference diameter, m
-#         self.Tref = Tref  # Reference temperature, K
-#         self.omega = omega  # Viscosity temperature exponent
-#
-#     def __repr__(self):
-#         return f"VSS_data(dref={self.dref:.3e} m, Tref={self.Tref} K, omega={self.omega})"
-
-
-# # База данных параметров VSS
-# VSS_DATABASE = {
-#     "N2-N2": VSSData(dref=4.04e-10, Tref=273, omega=0.686)
-# }
-#
-#
-# # Функция для получения параметров
-# def get_vss_data(collision_pair):
-#     """Get VSS parameters for collision pair"""
-#     key = f"{collision_pair.particle1.name}-{collision_pair.particle2.name}"
-#     return VSS_DATABASE.get(key)

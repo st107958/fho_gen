@@ -12,6 +12,90 @@ from FHO_FR_VV.constants import *
 from FHO_FR_VV.p_vv_mm_ij import p_vv, g, gamma
 from FHO_FR_VV.particles_data import *
 
+
+# def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='mc', N=2_00_0, seed=None):
+#     """
+#     Monte Carlo integration of VV transition probability
+#
+#     Parameters
+#     ----------
+#     m1, m2 : masses
+#     i1, f1, i2, f2 : vibrational quantum numbers
+#     E : collision energy [cm^-1]
+#     method : only 'mc' is supported
+#     N : number of Monte Carlo samples
+#     seed : random seed
+#
+#     Returns
+#     -------
+#     result : float
+#         Integral value
+#     """
+#
+#     # --- units ---
+#     e_in_J = h * c * 100          # 1/cm -> J
+#     E = E * e_in_J
+#
+#     if seed is not None:
+#         np.random.seed(seed)
+#
+#     # ===============================
+#     # Monte Carlo sampling
+#     # ===============================
+#
+#     # --- eps1, eps2 in triangle eps1 + eps2 <= 0.5 ---
+#     eps1 = np.random.rand(N) * 0.5
+#     eps2 = np.random.rand(N) * 0.5
+#     mask = (eps1 + eps2) <= 0.5
+#
+#     eps1 = eps1[mask]
+#     eps2 = eps2[mask]
+#     N_eff = len(eps1)
+#
+#     if N_eff == 0:
+#         return 0.0
+#
+#     # --- other variables ---
+#     y = np.random.rand(N_eff)
+#
+#     v1 = np.random.uniform(-np.pi/2, np.pi/2, N_eff)
+#     phi1 = np.random.uniform(-np.pi/2, np.pi/2, N_eff)
+#
+#     v2 = np.random.uniform(-np.pi/2, np.pi/2, N_eff)
+#     phi2 = np.random.uniform(-np.pi/2, np.pi/2, N_eff)
+#
+#     # --- integrand ---
+#     F = p_vv(
+#         m1, m2,
+#         i1, f1,
+#         i2, f2,
+#         E,
+#         eps1, eps2, y,
+#         v1, phi1,
+#         v2, phi2
+#     )
+#
+#     F = np.nan_to_num(F)
+#
+#     # ===============================
+#     # Volume of integration domain
+#     # ===============================
+#     # triangle in (eps1, eps2): (0.5^2)/2 = 1/8
+#     # y: [0, 1]
+#     # angles: (-pi/2, pi/2)^4
+#     V = (0.5**2 / 2) * np.pi**4   # = pi^4 / 8
+#
+#     # ===============================
+#     # Integral
+#     # ===============================
+#     result = V * np.mean(F)
+#
+#     # --- same normalization as before ---
+#     result = result / (np.pi ** 4)
+#
+#     return result
+
+
 def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
     e_in_J = h * c * 100
     E = E * e_in_J   # 1/cm --> J
@@ -56,9 +140,6 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
         F = p_vv(m1, m2, i1, f1, i2, f2, E, EPS1_filtered, EPS2_filtered, Y_filtered,
                  V1_filtered, PHI1_filtered, V2_filtered, PHI2_filtered)
 
-        # F = p_vv(m1, m2, i1, f1, i2, f2, E, EPS1_restored, EPS2_restored, Y_restored,
-        #          V1_restored, PHI1_restored, V2_restored, PHI2_restored)
-
         # print('F', F.shape)
 
         F_ = np.zeros_like(EPS1)  # Исходная форма (maxdiv, maxdiv, maxdiv, maxdiv, maxdiv, maxdiv, maxdiv)
@@ -66,38 +147,6 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
         F_ = np.nan_to_num(F_)
 
         # print('F_reshaped', F_.shape)
-
-        #1
-
-        # result = trapezoid(trapezoid(trapezoid(trapezoid(trapezoid(trapezoid(trapezoid(
-        #     F_, eps1, axis=6), eps2, axis=5), y, axis=4), v1, axis=3),
-        #     phi1, axis=2), v2, axis=1), phi2, axis=0)
-
-        #2
-        # print('ВЫчисление')
-        # start_time = time.time_ns()
-        # def integrand(eps1, eps2, y, v1, phi1, v2, phi2):
-        #     # Здесь должна быть ваша функция p_vv, возвращающая значение подынтегрального выражения
-        #     return p_vv(m1, m2, i1, f1, i2, f2, E, eps1, eps2, y, v1, phi1, v2, phi2)
-        #
-        #
-        # ranges = [
-        #     (0, 0.5),  # eps1 (верхний предел 0.5 из-за условия eps1 + eps2 <= 0.5)
-        #     (0, 0.5),  # eps2
-        #     (0, 1),  # y
-        #     (-np.pi / 2, np.pi / 2),  # v1
-        #     (-np.pi / 2, np.pi / 2),  # phi1
-        #     (-np.pi / 2, np.pi / 2),  # v2
-        #     (-np.pi / 2, np.pi / 2)  # phi2
-        # ]
-        #
-        # # Вычисляем интеграл с адаптацией
-        # result, error = nquad(integrand, ranges)
-        #
-        # end_time = time.time_ns()
-        # print((end_time - start_time) * 1e-9)
-
-        #3
 
         result = np.trapz(
             np.trapz(
@@ -112,18 +161,6 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
                     phi1, axis=2),
                 v2, axis=1),
             phi2, axis=0)
-
-        # print(result)
-
-        #############################################################
-
-        # F = np.nan_to_num(p_vv(m1, m2, i1, f1, i2, f2, E, EPS1, EPS2, Y, V1, PHI1, V2, PHI2) * mask, nan=0.0)
-        #
-        # result = trapezoid(trapezoid(trapezoid(trapezoid(trapezoid(trapezoid(trapezoid(
-        #     F, eps1, axis=6), eps2, axis=5), y, axis=4), v1, axis=3),
-        #     phi1, axis=2), v2, axis=1), phi2, axis=0)
-        #
-        # print(result)
 
         result = result / (np.pi ** 4)
 
