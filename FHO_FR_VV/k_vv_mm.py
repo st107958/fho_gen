@@ -52,6 +52,10 @@ def integrand(x_array, *args):
 
 
 def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
+
+    if i1 == f1 or i2 == f2:
+        return 0
+
     T_K = T
     T_inv_cm = T_K * k / h / c / 100  # 1/cm
 
@@ -118,5 +122,5 @@ def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
 # print(1e6 * k_vv_mm(N2, N2, 1, 3, 5, 3, 3000))  # cm^3 / s
 #
 # print(1e6 * k_vv_mm(N2, N2, 1, 3, 3, 1, 3000))  # cm^3 / s
-# print(1e6 * k_vv_mm(N2, N2, 1, 4, 3, 0, 3000))  # cm^3 / s
+# print(1e6 * k_vv_mm(N2, N2, 1, 1, 0, 0, 3000))  # cm^3 / s
 

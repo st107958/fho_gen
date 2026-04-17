@@ -37,23 +37,67 @@ def gamma(eps1, eps2, y, v1, phi1, v2, phi2):
 
 # безразмерная
 
+# def g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u):
+#     # print("v1 shape:", np.shape(v1))
+#     # print("v2 shape:", np.shape(v2))
+#     # print("eps1 shape:", np.shape(eps1))
+#     # print(f"u shape: {u.shape}")
+#     # print(f"ksi shape: {ksi.shape}")
+#
+#     # print(np.max(ksi), np.min(ksi))
+#
+#     if ksi == 0:
+#         return (np.power((np.cos(v1) * np.cos(phi1) * np.cos(v2) * np.cos(phi2)
+#                           * (gamma(eps1, eps2, y, v1, phi1, v2, phi2) * alpha * u * 0.5)), 2)
+#                 * (1 / (omega1 * omega2)))
+#
+#     if ksi > 20:
+#         return 0.0
+#
+#     return (np.power((np.cos(v1) * np.cos(phi1) * np.cos(v2) * np.cos(phi2)
+#             * (gamma(eps1, eps2, y, v1, phi1, v2, phi2) * alpha * u * 0.5)), 2)
+#             * (1 / (omega1 * omega2)) * np.power((ksi / np.sinh(ksi)), 2))
+
 def g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u):
-    # print("v1 shape:", np.shape(v1))
-    # print("v2 shape:", np.shape(v2))
-    # print("eps1 shape:", np.shape(eps1))
-    # print(f"u shape: {u.shape}")
-    # print(f"ksi shape: {ksi.shape}")
 
-    # print(np.max(ksi), np.min(ksi))
+    gamma_val = gamma(eps1, eps2, y, v1, phi1, v2, phi2)
 
-    if ksi == 0:
-        return (np.power((np.cos(v1) * np.cos(phi1) * np.cos(v2) * np.cos(phi2)
-                          * (gamma(eps1, eps2, y, v1, phi1, v2, phi2) * alpha * u * 0.5)), 2)
-                * (1 / (omega1 * omega2)))
+    base = (
+        np.cos(v1) * np.cos(phi1) *
+        np.cos(v2) * np.cos(phi2) *
+        (gamma_val * alpha * u * 0.5)
+    )**2 / (omega1 * omega2)
 
-    return (np.power((np.cos(v1) * np.cos(phi1) * np.cos(v2) * np.cos(phi2)
-            * (gamma(eps1, eps2, y, v1, phi1, v2, phi2) * alpha * u * 0.5)), 2)
-            * (1 / (omega1 * omega2)) * np.power((ksi / np.sinh(ksi)), 2))
+    # --- СКАЛЯРНЫЙ РЕЖИМ (quad) ---
+    if np.isscalar(ksi):
+        if abs(ksi) < 1e-30:
+            return base
+        if abs(ksi) > 50:
+            return 0.0
+
+        sinh_val = np.sinh(ksi)
+        if not np.isfinite(sinh_val):
+            return 0.0
+
+        return base * (ksi / sinh_val)**2
+
+    # --- ВЕКТОРНЫЙ РЕЖИМ ---
+    ksi = np.asarray(ksi)
+    base = np.asarray(base)
+
+    result = np.zeros_like(ksi, dtype=float)
+
+    mask_small = np.abs(ksi) < 1e-30
+    mask_large = np.abs(ksi) > 50
+    mask_mid = ~(mask_small | mask_large)
+
+    result[mask_small] = base[mask_small]
+    result[mask_large] = 0.0
+
+    x = ksi[mask_mid]
+    result[mask_mid] = base[mask_mid] * (x / np.sinh(x))**2
+
+    return result
 
 # безразмерная
 
