@@ -50,8 +50,6 @@ def R_VV_fast(m1, m2, v, N, v_max, T, coeffs_4d=COEFFS):
 
         R += (k1 * Nvp1 + k2 * Nvm1 - (k3 + k4) * N[v]) * N[v_]
 
-        if v_ == 2:
-            R += 2 * (k1 * Nvp1 + k2 * Nvm1 - (k3 + k4) * N[v]) * N[v_]
         # print(k1, k2, k3, k4)
 
     return R  * 8 # * 1000
