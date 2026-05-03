@@ -50,40 +50,73 @@ def R_VV_fast(m1, m2, v, N, v_max, T, coeffs_4d=COEFFS):
 
         R += (k1 * Nvp1 + k2 * Nvm1 - (k3 + k4) * N[v]) * N[v_]
 
+
         # print(k1, k2, k3, k4)
 
     return R # * 8 # * 1000
 
+# def rhs_fast(t, N_flat, r, dr, v_max, m1, m2, T, D):
+#     N = N_flat.reshape(v_max + 1, -1)  # [v, i]
+#     Nr = len(r)
+#     dNdt = np.zeros_like(N)
+#
+#     for i in range(Nr):  # по радиусу
+#         N_local = N[:, i]  # все уровни в точке i
+#         for v in range(v_max + 1):
+#             vv = R_VV_fast(m1, m2, v, N_local, v_max, T)
+#             dNdt[v, i] = vv
+#
+#     # Диффузия
+#     for v in range(v_max + 1):
+#         Nv = N[v, :]
+#         for i in range(Nr):
+#             if i == 0:
+#                 diff = D * 2 * (Nv[1] - Nv[0]) / dr ** 2
+#             elif i == Nr - 1:
+#                 diff = 0
+#             else:
+#                 diff = D * ((Nv[i + 1] - 2 * Nv[i] + Nv[i - 1]) / dr ** 2 +
+#                             (Nv[i + 1] - Nv[i - 1]) / (2 * r[i] * dr))
+#             dNdt[v, i] += diff
+#
+#     return dNdt.flatten()
+
+
 def rhs_fast(t, N_flat, r, dr, v_max, m1, m2, T, D):
-    N = N_flat.reshape(v_max + 1, -1)  # [v, i]
+    N = N_flat.reshape(v_max + 1, -1)
     Nr = len(r)
     dNdt = np.zeros_like(N)
 
-    for i in range(Nr):  # по радиусу
-        N_local = N[:, i]  # все уровни в точке i
+    # VV-член
+    for i in range(Nr):
+        N_local = N[:, i]
         for v in range(v_max + 1):
             vv = R_VV_fast(m1, m2, v, N_local, v_max, T)
             dNdt[v, i] = vv
 
     # Диффузия
-    for v in range(v_max + 1):
-        Nv = N[v, :]
-        for i in range(Nr):
-            if i == 0:
-                diff = D * 2 * (Nv[1] - Nv[0]) / dr ** 2
-            elif i == Nr - 1:
-                diff = 0
-            else:
-                diff = D * ((Nv[i + 1] - 2 * Nv[i] + Nv[i - 1]) / dr ** 2 +
-                            (Nv[i + 1] - Nv[i - 1]) / (2 * r[i] * dr))
-            dNdt[v, i] += diff
+    if D > 0:
+        for v in range(v_max + 1):
+            Nv = N[v, :]
+            for i in range(Nr):
+                if i == 0:
+                    diff = D * 2 * (Nv[1] - Nv[0]) / dr ** 2
+                elif i == Nr - 1:
+                    diff = 0
+                else:
+                    diff = D * ((Nv[i + 1] - 2 * Nv[i] + Nv[i - 1]) / dr ** 2 +
+                                (Nv[i + 1] - Nv[i - 1]) / (2 * r[i] * dr))
+                dNdt[v, i] += diff
+
+        # Отладка: вывести максимальную диффузию для v=1
+        # if int(t * 1e6) % 2 == 0:  # раз в 2 мкс
+        #     max_diff = np.max(np.abs(dNdt[1, :]))
+        #     print(f"t={t * 1e6:.1f} мкс, max(diff) = {max_diff:.2e}")
 
     return dNdt.flatten()
 
-
-
 #D = 0
-D = 0.2    # D ~0.2 см²/с
+D = 0.4    # D ~0.2 см²/с
 
 
 t_span = (0, 12e-6)  # 65 нс - 5 мкс (как в статье)
