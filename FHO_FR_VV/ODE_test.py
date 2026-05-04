@@ -115,10 +115,62 @@ def vv_term(n, v_max, T, coeffs_dict):
 
             R += (k1 * n_vp1 + k2 * n_vm1 - (k3 + k4) * n[v]) * n[vp]
 
-        vv[v] = R * 8.0 * 2.7
+        vv[v] =  R * 8.0 #* 2.7
 
     return vv
 
+# def vv_term(n, v_max, T, coeffs_dict):
+#     """
+#     n[v] – населённости одного радиального узла (0..v_max)
+#     возвращает dn_v/dt от VV-обмена
+#     """
+#     n_v = len(n)
+#     vv = np.zeros(n_v)
+#
+#     # Множитель 1.0 (убрать 8.0*2.7 после отладки)
+#     scale = 8.0  # Временно, для проверки знаков
+#
+#     for v in range(n_v):
+#         R = 0.0
+#         for vp in range(n_v):
+#             # Приход в v из v-1: (v-1, vp) → (v, vp-1)
+#             k_in_from_vm1 = 0.0
+#             if v - 1 >= 0 and vp - 1 >= 0:
+#                 k_in_from_vm1 = k_lookup(coeffs_dict, v - 1, v, vp, vp - 1, T)
+#
+#             # Приход в v из v+1: (v+1, vp) → (v, vp+1)
+#             k_in_from_vp1 = 0.0
+#             if v + 1 <= v_max and vp + 1 <= v_max:
+#                 k_in_from_vp1 = k_lookup(coeffs_dict, v + 1, v, vp, vp + 1, T)
+#
+#             # Уход из v в v+1: (v, vp) → (v+1, vp-1)
+#             k_out_to_vp1 = 0.0
+#             if v + 1 <= v_max and vp - 1 >= 0:
+#                 k_out_to_vp1 = k_lookup(coeffs_dict, v, v + 1, vp, vp - 1, T)
+#
+#             # Уход из v в v-1: (v, vp) → (v-1, vp+1)
+#             k_out_to_vm1 = 0.0
+#             if v - 1 >= 0 and vp + 1 <= v_max:
+#                 k_out_to_vm1 = k_lookup(coeffs_dict, v, v - 1, vp, vp + 1, T)
+#
+#             # Населенности для приходных членов
+#             n_vm1 = n[v - 1] if v - 1 >= 0 else 0.0
+#             n_vp1 = n[v + 1] if v + 1 <= v_max else 0.0
+#
+#             # Ток: приход - уход
+#             # Член с k_in_from_vm1 требует n[v-1] и n[vp]
+#             # Член с k_in_from_vp1 требует n[v+1] и n[vp]
+#             # Член с k_out_to_vp1 требует n[v] и n[vp]
+#             # Член с k_out_to_vm1 требует n[v] и n[vp]
+#
+#             term = (k_in_from_vm1 * n_vm1 + k_in_from_vp1 * n_vp1 -
+#                     (k_out_to_vp1 + k_out_to_vm1) * n[v]) * n[vp]
+#
+#             R += term
+#
+#         vv[v] = R * scale
+#
+#     return vv
 
 # -------------------------------------------------------------
 # 4. Правая часть для solve_ivp (диффузия + VV)
@@ -151,7 +203,7 @@ def rhs(t, y, r, D, v_max, T, coeffs_dict, bc_outer="dirichlet"):
 # -------------------------------------------------------------
 # 5. Начальные условия (гауссов пучок, заселение v=1)
 # -------------------------------------------------------------
-def initial_condition(r, v_max, frac_excited=0.37, w0=46e-4, total_density=5.14e18):
+def initial_condition(r, v_max, frac_excited=0.33, w0=46e-4, total_density=5.14e18):
     """
     frac_excited: доля молекул в v=1 на оси пучка
     w0: радиус пучка (см) – в статье ~80 мкм = 80e-4 см
@@ -294,7 +346,32 @@ sol = solve_ivp(
 
 print(f"Успешно: {sol.success}")
 
-# Восстанавливаем решение и считаем fractional populations (как в ODE_O2)
+# # Восстанавливаем решение и считаем fractional populations (как в ODE_O2)
+# Nr = len(r)
+# nv = v_max + 1
+# N_sol = sol.y.reshape(v_max + 1, Nr, -1)
+# dr = r[1] - r[0]
+# full_N = np.array(
+#     [[2 * np.pi * np.sum(N_sol[v, :, t] * r * dr) for t in range(len(sol.t))] for v in range(v_max + 1)]
+# )
+# obs_N = probe_weighted_population(N_sol, r, sigma_probe=SIGMA_PROBE)
+#
+# # ИСПРАВЛЕНИЕ: Используем абсолютные концентрации как в статье
+# # В статье O2 (2005) калибровка по室温ному спектру, где все молекулы в v=0
+# # Поэтому f(v) = N_v / N_total, где N_total - полная плотность O2
+# total_density_initial = 5.14e18  # см⁻³, полная плотность O2 при 760 Torr, 300K
+# fractional = obs_N / total_density_initial  # абсолютные доли (без перенормировки)
+#
+# print_diagnostics(sol, N_sol, r, title=f"(bc={BC_OUTER}, D={D})")
+#
+# # Диагностика: проверка суммы f(v) (должна быть <1 из-за диффузии)
+# sum_f = np.sum(fractional, axis=0)
+# print(f"\n=== Диагностика нормировки ===")
+# print(f"Сумма f(v) при t=0: {sum_f[0]:.4f} (должна быть ~1.0)")
+# print(f"Сумма f(v) при t=10 мкс: {sum_f[-1]:.4f} (должна быть <1 из-за диффузии)")
+# print(f"Потеря сигнала за 10 мкс: {(1 - sum_f[-1]/sum_f[0])*100:.2f}%")
+
+# Восстанавливаем решение и считаем fractional populations
 Nr = len(r)
 nv = v_max + 1
 N_sol = sol.y.reshape(v_max + 1, Nr, -1)
@@ -303,8 +380,32 @@ full_N = np.array(
     [[2 * np.pi * np.sum(N_sol[v, :, t] * r * dr) for t in range(len(sol.t))] for v in range(v_max + 1)]
 )
 obs_N = probe_weighted_population(N_sol, r, sigma_probe=SIGMA_PROBE)
-fractional = obs_N / np.sum(obs_N, axis=0)
+
+# ========== ПРАВИЛЬНАЯ НОРМИРОВКА (калибровка по начальному сигналу) ==========
+# В эксперименте: калибровка по室温ному спектру
+# При t=0: f(0)_expected = 0.63, f(1)_expected = 0.37
+f0_expected = 0.63
+f1_expected = 0.37
+
+# Калибровочный множитель (приводим obs_N к абсолютным долям)
+# При t=0: obs_N[0,0] * scale = f0_expected
+scale = f0_expected / obs_N[0, 0]
+
+fractional = obs_N * scale
+
 print_diagnostics(sol, N_sol, r, title=f"(bc={BC_OUTER}, D={D})")
+
+# Диагностика
+print(f"\n=== Диагностика нормировки (калибровка по теоретическим долям) ===")
+print(f"Scale factor: {scale:.4f}")
+print(f"f(0) при t=0: {fractional[0,0]:.4f} (цель: {f0_expected})")
+print(f"f(1) при t=0: {fractional[1,0]:.4f} (цель: {f1_expected})")
+print(f"Отношение f(0)/f(1): {fractional[0,0]/fractional[1,0]:.3f}")
+
+sum_f = np.sum(fractional, axis=0)
+print(f"Сумма f(v) при t=0: {sum_f[0]:.4f}")
+print(f"Сумма f(v) при t=10 мкс: {sum_f[-1]:.4f}")
+print(f"Потеря сигнала за 10 мкс: {(1 - sum_f[-1]/sum_f[0])*100:.2f}%")
 
 
 def diffusion_impact_report(t, frac_with, frac_without, v_levels=[0, 1, 2, 3]):
@@ -368,8 +469,10 @@ def quick_diffusion_check(sol, N_sol, r, t_eval, y0, v_max, T, coeffs_dict):
     obs_with = probe_weighted_population(N_sol, r, SIGMA_PROBE)
     obs_without = probe_weighted_population(N_no_diff, r, SIGMA_PROBE)
 
-    frac_with = obs_with / np.sum(obs_with, axis=0)
-    frac_without = obs_without / np.sum(obs_without, axis=0)
+    # Используем абсолютные концентрации для обоих решений
+    total_density_initial = 5.14e18
+    frac_with = obs_with / total_density_initial
+    frac_without = obs_without / total_density_initial
 
     # Отчет
     diffusion_impact_report(sol.t, frac_with, frac_without)
@@ -378,10 +481,7 @@ def quick_diffusion_check(sol, N_sol, r, t_eval, y0, v_max, T, coeffs_dict):
 
 
 # Использование (после вашего основного расчета):
-# frac_with, frac_without = quick_diffusion_check(sol, N_sol, r, t_eval, y0, v_max, T, COEFFS)
-
-
-
+frac_with, frac_without = quick_diffusion_check(sol, N_sol, r, t_eval, y0, v_max, T, COEFFS)
 
 
 # Функция для чтения CSV с заменой запятых на точки
@@ -457,6 +557,16 @@ for v in range(min(6, v_max + 1)):
 for v in range(2, 6):
     axes[v].set_xlim(0, 6)      # показывать только до 6 мкс
 
+# Добавляем график суммы f(v) для диагностики диффузии
+fig2, ax2 = plt.subplots(1, 1, figsize=(8, 5))
+ax2.plot(sol.t * 1e6, sum_f, 'b-', linewidth=2, label='Сумма f(v)')
+ax2.axhline(y=1.0, color='r', linestyle='--', label='Начальное значение (1.0)')
+ax2.set_xlabel('Время, мкс')
+ax2.set_ylabel('Сумма f(v)')
+ax2.set_title('Потеря сигнала из-за диффузии')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+ax2.set_ylim(0.9, 1.05)
 
 plt.tight_layout()
 plt.show()
@@ -468,6 +578,7 @@ for ti in time_indices:
     print(f"\nt = {sol.t[ti] * 1e6:.2f} мкс:")
     for v in range(min(6, v_max + 1)):
         print(f"  v={v}: {fractional[v, ti]:.6f}")
+    print(f"  сумма: {np.sum(fractional[:, ti]):.6f}")
 
 #таблицпа
 def print_my_table(coeffs_dict, v_max=5, T=300):
@@ -505,7 +616,3 @@ def print_my_table(coeffs_dict, v_max=5, T=300):
 
 # Запуск
 print_my_table(COEFFS, v_max=5, T=300)
-
-
-
-
