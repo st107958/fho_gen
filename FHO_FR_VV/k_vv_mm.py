@@ -3,124 +3,77 @@ import numpy as np
 
 from scipy.integrate import quad
 
-from scipy.special import factorial, gamma
-from FHO_FR_VV.p_vv_mm import *
-from FHO_FR_VV.constants import *
-
-# def get_crossection_VSS(velocity: float, collision_reduced_mass: float, VSS_data: VSSData):
-#     gref = np.sqrt(2 * k * VSS_data.Tref / collision_reduced_mass) # Reference velocity, m/s
-#     return np.pi * VSS_data.dref**2 * (velocity / gref) ** (1 - 2 * VSS_data.omega) / gamma(2.5 - VSS_data.omega)
-
-def integrand(x_array, *args):
-    m1, m2, i1, f1, i2, f2, T_inv_cm = args
-
-    # print(x_array.shape)
-
-    x_array = np.atleast_1d(x_array)
-    results = np.zeros_like(x_array)
-    for idx, x in enumerate(x_array):
-        E = x * T_inv_cm
-        results[idx] = p_vv_int(m1, m2, i1, f1, i2, f2, E, 'trapez')
-    return results * np.exp(-x_array) * np.power(x_array, 3)
+from p_vv_mm import p_vv_int
+from constants import k, h, c
 
 
-# def integrand(x, *args):
-#     m1, m2, i1, f1, i2, f2, T_inv_cm = args
-#
-#     E = x * T_inv_cm
-#     pvv_result = p_vv_int(m1, m2, i1, f1, i2, f2, E, 'trapez')
-#
-#     return pvv_result * np.exp(-x) * np.power(x, 3)
+def k_vv_mm_n2_n2_for_v(v: int, T: float = 300.0) -> float:
+    """
+    N2–N2 V–V: (v1, i1)=(1)→(0), (v2)=(v−1)→(v). См³/с.
+    Вынесено в модуль для ProcessPoolExecutor.map (pickle).
+    """
+    from particles_data import N2
+
+    return k_vv_mm(N2, N2, i1=1, i2=v - 1, f1=0, f2=v, T=T)
 
 
-# def integrand1(x_array, *args):
-#     m1, m2, i1, f1, i2, f2, T_inv_cm = args
-#
-#     m = (m1.mass * m2.mass) / (m1.mass + m2.mass)
-#     x_array = np.atleast_1d(x_array)
-#     probability = np.zeros_like(x_array)
-#     crossection = np.zeros_like(x_array)
-#
-#     for idx1, x1 in enumerate(x_array):
-#         E = np.power(x1, 2) * m / 2
-#         probability[idx1] = p_vv_int(m1, m2, i1, f1, i2, f2, E, 'trapez')
-#
-#     for idx2, x2 in enumerate(x_array):
-#         crossection[idx2] = get_crossection_VSS(x2, m)
-#
-#     return crossection * probability * np.exp(-np.power(x_array, 2) * m / 2 * k * T_inv_cm) * x_array
+def k_vv_mm_o2_o2_for_v(v: int, T: float = 300.0) -> float:
+    """
+    O2–O2 V–V: i1=v, f1=v−1, i2=0, f2=1. См³/с.
+    Вынесено в модуль для ProcessPoolExecutor.map (pickle).
+    """
+    from particles_data import O2
+
+    return k_vv_mm(O2, O2, i1=v, f1=v - 1, i2=0, f2=1, T=T)
 
 
 def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
-
-    if i1 == f1 or i2 == f2:
-        return 0
-
     T_K = T
-    T_inv_cm = T_K * k / h / c / 100  # 1/cm
+    T_inv_cm = T_K * k / (h * c * 100)
 
-    m_red = (m1.mass * m2.mass) / (m1.mass + m2.mass)  # приведенная масса, kg
-    r = (m1.diameter + m2.diameter) / 2  # collision diameter
-    # print(r)
+    m_red = (m1.mass * m2.mass) / (m1.mass + m2.mass)
 
-    mean_u = np.sqrt(8 * k * T_K / (np.pi * m_red))  # m/s
+    # ---------- ИСПРАВЛЕНИЕ: вычисление R0 ----------
+    # Параметры потенциала (одинаковые для N2-N2, O2-O2)
+    A_eV = 1730.0                     # эВ
+    A_J = A_eV * 1.602176634e-19      # Дж
+    alpha_m = 4e10                  # 1/м
 
+    # Потенциал U(R) = 4 * A * exp(-alpha * R)
+    U0 = 4.0 * A_J
 
-    # if m1 == m2 and i1 == f2 and i2 == f1:
-    #
-    #     s = np.absolute(i2 - f2)
-    #     el_lvl = 1 - 1  # electronic level
-    #
-    #     e1_1 = m1.ev_i[el_lvl][i1]  # initial state, J
-    #     e1_2 = m1.ev_i[el_lvl][f1]  # final state, J
-    #
-    #     omega = np.absolute(e1_1 - e1_2) / (s * h_red)  # J/(J*s)=1/s
-    #
-    #     ns1 = np.power((factorial(max(i1, f1)) / factorial(min(i1, f1))), (1 / s))
-    #     ns2 = np.power((factorial(max(i2, f2)) / factorial(min(i2, f2))), (1 / s))
-    #
-    #     z = 3 * pi * np.power(r, 2) * mean_u # m^3/s
-    #     # z = 3 * np.power(r, 2) * mean_u  # m^3/s
-    #
-    #     f = ((np.power((1 + (1 / np.power(2, s-1))), 4) * factorial(s+3))
-    #          / (np.power(2, s+8) * np.power(s+1, 2) * factorial(3)))
-    #
-    #     f_2 = np.power(alpha / omega, 2) * k * T_K / (2 * m_red)
-    #
-    #     result = (z * f * np.power(ns1 * ns2 * f_2, s) / np.power(factorial(s), 2)
-    #               / np.power((1 + ((2 * ns1 * ns2 * f * f_2) / (s + 1))), s+4))
-    #
-    #     return result*1e6  # sm^3/s
-    #
-    # else:
-    #     args = (m1, m2, i1, f1, i2, f2, T_inv_cm)
-    #     args1 = (m1, m2, i1, f1, i2, f2, T_K)
-    #     result, error = quad(integrand, 0, np.inf, args=args, epsabs=1e-15, limit=1000)
-    #     #result1, error1 = quad(integrand1, 0, np.inf, args=args1, epsabs=1e-15, limit=1000)
-    #     # print(error)
-    #
-    #     # result1 = quad(integrand, 0, 1e10, args=args)
-    #     # result2 = quad(integrand, 1e6, np.inf, args=args)[0]
-    #     # result = result1 + result2
-    #
-    #     k_vv = np.pi * (r ** 2) * mean_u * result * 1e6 / 6 # sm^3/s
-    #     #k_vv = np.pi * (r ** 2) * mean_u * result * 1e6   # sm^3/s
-    #
-    #     return k_vv
+    # R0 из условия U(R0) = kT
+    R0 = (1.0 / alpha_m) * np.log(U0 / (k * T_K))
+    # ------------------------------------------------
 
+    # Средняя скорость (как раньше)
+    mean_u = np.sqrt(8 * k * T_K / (np.pi * m_red))
 
-    args = (m1, m2, i1, f1, i2, f2, T_inv_cm)
-    result, error = quad(integrand, 0, np.inf, args=args, epsabs=1e-15, limit=1000)
-    k_vv = np.pi * (r ** 2) * mean_u * result * 1e6 / 6  # sm^3/s
+    # Энергетический дефект ΔE (Дж → см⁻¹)
+    el_lvl = 0
+    e_i1 = m1.ev_i[el_lvl][i1]
+    e_f1 = m1.ev_i[el_lvl][f1]
+    e_i2 = m2.ev_i[el_lvl][i2]
+    e_f2 = m2.ev_i[el_lvl][f2]
+    delta_E_J = (e_i1 + e_i2) - (e_f1 + e_f2)
+    delta_E_cm = delta_E_J / (h * c * 100)   # ΔE в см⁻¹
 
+    def integrand(x, *args):
+        # x = E_bar / (kT)
+        m1_, m2_, i1_, f1_, i2_, f2_, T_inv_cm_, dE_cm = args
 
+        # Симметризованная энергия (см⁻¹)
+        E_bar_cm = x * T_inv_cm_
+
+        # Вероятность считается от СИММЕТРИЗОВАННОЙ энергии,
+        # как того требует формула (20)
+        prob = p_vv_int(m1_, m2_, i1_, f1_, i2_, f2_, E_bar_cm, 'trapez')
+
+        return prob * np.exp(-x) * x**3
+
+    args = (m1, m2, i1, f1, i2, f2, T_inv_cm, delta_E_cm)
+    result, _ = quad(integrand, 0, np.inf, args=args, epsabs=1e-15, epsrel=1e-15, limit=10000)
+
+    # Константа скорости в см³/с
+    k_vv = np.pi * R0**2 * mean_u * result * 1e6
     return k_vv
-
-
-# print(1e6 * k_vv_mm(N2, N2, 41, 40, 40, 41, 3000))  # cm^3 / s
-#
-# print(1e6 * k_vv_mm(N2, N2, 1, 3, 5, 3, 3000))  # cm^3 / s
-#
-# print(1e6 * k_vv_mm(N2, N2, 1, 3, 3, 1, 3000))  # cm^3 / s
-# print(1e6 * k_vv_mm(N2, N2, 1, 1, 0, 0, 3000))  # cm^3 / s
-

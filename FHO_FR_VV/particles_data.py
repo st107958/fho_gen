@@ -1,4 +1,4 @@
-from FHO_FR_VV.levels import levels_e_ex
+from levels import levels_e_ex
 import numpy as np
 
 class particle:
@@ -60,26 +60,3 @@ O2.weye = [-3.0]                           # 1/m  (малый третий чл�
 
 e_i_O2 = levels_e_ex(O2, 0)
 O2.add_ev_i(e_i_O2 - e_i_O2[0])
-
-
-
-
-# print(N2.mass)
-# print(e_i)
-# print(N2.ev_i)
-
-# print(CO.ev_i)
-
-
-# m1 = CO
-# m2 = CO
-#
-# m_red = m1.mass * m2.mass / (m1.mass + m2.mass)
-# print(m_red)
-
-# print(N2 == N2)
-#
-# m1 = N2
-# m2 = N2
-#
-# print(m1 == m2)

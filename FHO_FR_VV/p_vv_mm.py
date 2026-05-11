@@ -1,130 +1,39 @@
-from scipy.integrate import nquad, trapezoid
-from scipy.integrate import simpson
+from scipy.integrate import trapezoid
 import numpy as np
-import time
-
-from numba import cuda
-
-#np.set_printoptions(threshold=np.inf)
-import cupy as cp
-
-from FHO_FR_VV.constants import *
-from FHO_FR_VV.p_vv_mm_ij import p_vv, g, gamma
-from FHO_FR_VV.particles_data import *
 
 
-# def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='mc', N=2_00_0, seed=None):
-#     """
-#     Monte Carlo integration of VV transition probability
-#
-#     Parameters
-#     ----------
-#     m1, m2 : masses
-#     i1, f1, i2, f2 : vibrational quantum numbers
-#     E : collision energy [cm^-1]
-#     method : only 'mc' is supported
-#     N : number of Monte Carlo samples
-#     seed : random seed
-#
-#     Returns
-#     -------
-#     result : float
-#         Integral value
-#     """
-#
-#     # --- units ---
-#     e_in_J = h * c * 100          # 1/cm -> J
-#     E = E * e_in_J
-#
-#     if seed is not None:
-#         np.random.seed(seed)
-#
-#     # ===============================
-#     # Monte Carlo sampling
-#     # ===============================
-#
-#     # --- eps1, eps2 in triangle eps1 + eps2 <= 0.5 ---
-#     eps1 = np.random.rand(N) * 0.5
-#     eps2 = np.random.rand(N) * 0.5
-#     mask = (eps1 + eps2) <= 0.5
-#
-#     eps1 = eps1[mask]
-#     eps2 = eps2[mask]
-#     N_eff = len(eps1)
-#
-#     if N_eff == 0:
-#         return 0.0
-#
-#     # --- other variables ---
-#     y = np.random.rand(N_eff)
-#
-#     v1 = np.random.uniform(-np.pi/2, np.pi/2, N_eff)
-#     phi1 = np.random.uniform(-np.pi/2, np.pi/2, N_eff)
-#
-#     v2 = np.random.uniform(-np.pi/2, np.pi/2, N_eff)
-#     phi2 = np.random.uniform(-np.pi/2, np.pi/2, N_eff)
-#
-#     # --- integrand ---
-#     F = p_vv(
-#         m1, m2,
-#         i1, f1,
-#         i2, f2,
-#         E,
-#         eps1, eps2, y,
-#         v1, phi1,
-#         v2, phi2
-#     )
-#
-#     F = np.nan_to_num(F)
-#
-#     # ===============================
-#     # Volume of integration domain
-#     # ===============================
-#     # triangle in (eps1, eps2): (0.5^2)/2 = 1/8
-#     # y: [0, 1]
-#     # angles: (-pi/2, pi/2)^4
-#     V = (0.5**2 / 2) * np.pi**4   # = pi^4 / 8
-#
-#     # ===============================
-#     # Integral
-#     # ===============================
-#     result = V * np.mean(F)
-#
-#     # --- same normalization as before ---
-#     result = result / (np.pi ** 4)
-#
-#     return result
+from constants import h, c
+from p_vv_mm_ij import p_vv
 
 
 def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
     e_in_J = h * c * 100
     E = E * e_in_J   # 1/cm --> J
 
-    # print('E', E)
-
-    # if m1 == m2 and i1 == f2 and i2 == f1:
-    #     raise ValueError("ksi = 0, resonance process")
 
     if method == 'trapez':
-        maxdiv = 3  # макс. кол-во делений: 18
+        maxdiv = 9  # макс. кол-во делений: 18
 
         # пределы интегрирования
         eps1 = np.linspace(0, 1, maxdiv)
         eps2 = np.linspace(0, 1, maxdiv)
         y = np.linspace(0, 1, maxdiv)
-        v1 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
-        phi1 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
-        v2 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
-        phi2 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
+        v1 = np.linspace(0, np.pi, maxdiv)
+        phi1 = np.linspace(0, np.pi, maxdiv)
+        v2 = np.linspace(0, np.pi, maxdiv)
+        phi2 = np.linspace(0, np.pi, maxdiv)
 
         EPS1, EPS2, Y, V1, PHI1, V2, PHI2 = np.meshgrid(eps1, eps2, y, v1, phi1, v2, phi2, indexing='ij')
 
-
-        # print('eps1 grid shape', EPS1.shape)
-
-        # mask = (EPS1 + EPS2) <= (1-np.power(Y, 2))/(2*(1-np.power(Y, 2)/2))
         mask = (EPS1 + EPS2) <= 1/2
-        #############################################
+        # eps1, eps2, y уже сетки
+        # mask = (EPS1 >= 0) & (EPS2 >= 0) & (EPS2 <= 1 - EPS1)  # треугольник
+        # # добавляем ограничение (5) из статьи
+        # with np.errstate(divide='ignore', invalid='ignore'):
+        #     limit = 0.5 * (1 - Y**2) / (1 - Y**2/2)
+        #     # в точках y=1 знаменатель 1 - 1/2 = 0.5 → limit=0, ок
+        #     # для y близких к sqrt(2) будет особенность, но y ∈ [0,1]
+        # mask = mask & (EPS1 + EPS2 <= limit)
 
         EPS1_filtered = EPS1[mask]
         EPS2_filtered = EPS2[mask]
@@ -134,27 +43,20 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
         V2_filtered = V2[mask]
         PHI2_filtered = PHI2[mask]
 
-
-        # print('eps1_filtered grid shape', EPS1_restored.shape)
-
         F = p_vv(m1, m2, i1, f1, i2, f2, E, EPS1_filtered, EPS2_filtered, Y_filtered,
                  V1_filtered, PHI1_filtered, V2_filtered, PHI2_filtered)
-
-        # print('F', F.shape)
 
         F_ = np.zeros_like(EPS1)  # Исходная форма (maxdiv, maxdiv, maxdiv, maxdiv, maxdiv, maxdiv, maxdiv)
         F_[mask] = F  # допустимые точки
         F_ = np.nan_to_num(F_)
 
-        # print('F_reshaped', F_.shape)
-
-        result = np.trapz(
-            np.trapz(
-                np.trapz(
-                    np.trapz(
-                        np.trapz(
-                            np.trapz(
-                                np.trapz(F_, eps1, axis=6),
+        result = trapezoid(
+            trapezoid(
+                trapezoid(
+                    trapezoid(
+                        trapezoid(
+                            trapezoid(
+                                trapezoid(F_, eps1, axis=6),
                                 eps2, axis=5),
                             y, axis=4),
                         v1, axis=3),
@@ -166,17 +68,6 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
 
     return result
 
-# print(p_vv_int(CO, N2, 1, 1, 1, 1, 10000, 'trapez'))
-#
-#
-#
-# print(p_vv_int(N2, N2, 1, 0, 0, 1, 10000, 'trapez'))
-#
-# print(p_vv_int(N2, N2, 4, 2, 0, 3, 10000, 'trapez'))
-#
-# print(p_vv_int(N2, N2, 5, 2, 0, 3, 10000, 'trapez'))
-# print(p_vv_int(N2, N2, 5, 1, 0, 4, 10000, 'trapez'))
-# print(p_vv_int(N2, N2, 6, 1, 0, 5, 10000, 'trapez'))
 
 
 
