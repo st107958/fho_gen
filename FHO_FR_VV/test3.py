@@ -35,6 +35,25 @@ for i in range(3, 42):
     y_s3.append(y)
     print('y2:', y)
 
+
+# x1 =[]
+# y_s2 = []
+# for i in range(2, 5):
+#     x1.append(i)
+#     print('x1:', i)
+#     y = p_vv_int(N2, N2, i, i-s2, 0, s2, 10000, 'trapez')
+#     y_s2.append(y)
+#     print('y1:', y)
+#
+# x2 =[]
+# y_s3 = []
+# for i in range(3, 5):
+#     x2.append(i)
+#     print('x2:', i)
+#     y = p_vv_int(N2, N2, i, i-s3, 0, s3, 10000, 'trapez')
+#     y_s3.append(y)
+#     print('y2:', y)
+
 fig, ax = plt.subplots()
 
 fho_s2, = ax.plot(x1, y_s2, '-^', markersize=5)

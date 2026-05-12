@@ -110,7 +110,8 @@ def k_vv_mm(m1, m2, i1, f1, i2, f2, T):
 
 
     args = (m1, m2, i1, f1, i2, f2, T_inv_cm)
-    result, error = quad(integrand, 0, np.inf, args=args, epsabs=1e-15, limit=1000)
+    #result, error = quad(integrand, 0, np.inf, args=args, epsabs=1e-15, limit=1000)
+    result, error = quad(integrand, 0, np.inf, args=args, epsabs=1e-16, limit=5000)
     k_vv = np.pi * (r ** 2) * mean_u * result * 1e6 / 6  # sm^3/s
 
 

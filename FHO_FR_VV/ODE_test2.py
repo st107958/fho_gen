@@ -73,46 +73,89 @@ def rhs_fast(t, N_flat, r, dr, v_max, m1, m2, T, D):
     return dNdt.flatten()
 
 
-def rhs_fast_with_inflow(t, N_flat, r, dr, v_max, m1, m2, T, D, N_total):
-    N = N_flat.reshape(v_max + 1, -1)
+# def rhs_fast_with_inflow(t, N_flat, r, dr, v_max, m1, m2, T, D, N_total):
+#     N = N_flat.reshape(v_max + 1, -1)
+#     Nr = len(r)
+#     dNdt = np.zeros_like(N)
+#
+#     # VV-обмен
+#     for i in range(Nr):
+#         N_local = N[:, i]
+#         for v in range(v_max + 1):
+#             vv = R_VV_fast(m1, m2, v, N_local, v_max, T)
+#             dNdt[v, i] = vv
+#
+#     # Диффузия с притоком из резервуара
+#     for v in range(v_max + 1):
+#         Nv = N[v, :]
+#         for i in range(Nr):
+#             if i == 0:
+#                 diff = D * 2 * (Nv[1] - Nv[0]) / dr ** 2
+#             elif i == Nr - 1:
+#                 # На границе: восстанавливаем равновесное распределение
+#                 # Характерное время диффузии на длине ячейки
+#                 L = r[-1]  # размер ячейки
+#                 tau_diff = L ** 2 / D  # ~ время перемешивания во всей ячейке
+#
+#                 if v == 0:
+#                     # v=0 возвращается к полной плотности
+#                     N_eq = N_total
+#                 else:
+#                     # возбужденные уходят в ноль
+#                     N_eq = 0.0
+#
+#                 # Приток/отток через границу
+#                 diff = (N_eq - Nv[-1]) / tau_diff
+#             else:
+#                 diff = D * ((Nv[i + 1] - 2 * Nv[i] + Nv[i - 1]) / dr ** 2 +
+#                             (Nv[i + 1] - Nv[i - 1]) / (2 * r[i] * dr))
+#             dNdt[v, i] += diff
+#
+#     return dNdt.flatten()
+
+
+def rhs_fixed(t, N_flat, r, dr, v_max, m1, m2, T, D, N_total):
+    N = N_flat.reshape(v_max + 1, -1)  # [v, i]
     Nr = len(r)
     dNdt = np.zeros_like(N)
 
-    # VV-обмен
+    # ---------------------------
+    # 1. VV-обмен (как у тебя)
+    # ---------------------------
     for i in range(Nr):
         N_local = N[:, i]
         for v in range(v_max + 1):
-            vv = R_VV_fast(m1, m2, v, N_local, v_max, T)
-            dNdt[v, i] = vv
+            dNdt[v, i] = R_VV_fast(m1, m2, v, N_local, v_max, T)
 
-    # Диффузия с притоком из резервуара
+    # ---------------------------
+    # 2. Диффузия (как у тебя)
+    # ---------------------------
     for v in range(v_max + 1):
         Nv = N[v, :]
         for i in range(Nr):
             if i == 0:
-                diff = D * 2 * (Nv[1] - Nv[0]) / dr ** 2
+                diff = D * 2 * (Nv[1] - Nv[0]) / dr**2
             elif i == Nr - 1:
-                # На границе: восстанавливаем равновесное распределение
-                # Характерное время диффузии на длине ячейки
-                L = r[-1]  # размер ячейки
-                tau_diff = L ** 2 / D  # ~ время перемешивания во всей ячейке
-
-                if v == 0:
-                    # v=0 возвращается к полной плотности
-                    N_eq = N_total
-                else:
-                    # возбужденные уходят в ноль
-                    N_eq = 0.0
-
-                # Приток/отток через границу
-                diff = (N_eq - Nv[-1]) / tau_diff
+                # мягкое условие: градиент = 0
+                diff = D * 2 * (Nv[-2] - Nv[-1]) / dr**2
             else:
-                diff = D * ((Nv[i + 1] - 2 * Nv[i] + Nv[i - 1]) / dr ** 2 +
-                            (Nv[i + 1] - Nv[i - 1]) / (2 * r[i] * dr))
+                diff = D * (
+                    (Nv[i + 1] - 2 * Nv[i] + Nv[i - 1]) / dr**2 +
+                    (Nv[i + 1] - Nv[i - 1]) / (2 * r[i] * dr)
+                )
             dNdt[v, i] += diff
 
-    return dNdt.flatten()
+    # ---------------------------
+    # 3. 🔥 КЛЮЧЕВОЙ ФИКС: сохранение плотности
+    # ---------------------------
+    # реализует приток холодного газа
+    for i in range(Nr):
+        total = np.sum(N[:, i])
+        if total > 0:
+            correction = (N_total - total) / (v_max + 1)
+            dNdt[:, i] += correction
 
+    return dNdt.flatten()
 
 # Параметры
 D = 0.2  # коэффициент диффузии, см²/с
@@ -150,15 +193,23 @@ for i in range(Nr):
 
 N0_flat = N0.flatten()
 
+# # Решение
+# sol = solve_ivp(
+#     lambda t, N: rhs_fast(t, N, r, dr, v_max, m1, m2, T, D),
+#     t_span,
+#     N0_flat,
+#     t_eval=t_eval,
+#     method='Radau'
+# )
+
 # Решение
 sol = solve_ivp(
-    lambda t, N: rhs_fast(t, N, r, dr, v_max, m1, m2, T, D),
+    lambda t, N: rhs_fixed(t, N, r, dr, v_max, m1, m2, T, D, N_total),
     t_span,
     N0_flat,
     t_eval=t_eval,
     method='Radau'
 )
-
 
 # ========== НОРМИРОВКА С УЧЕТОМ ДИФФУЗИИ ==========
 # Используем probe-weighted population (как в эксперименте)

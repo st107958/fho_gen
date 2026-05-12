@@ -132,8 +132,10 @@ m2 = O2
 T = 300
 
 a = 80e-4
-Rmax = 5 * a
-Nr = 50
+# Rmax = 5 * a
+# Nr = 50
+Rmax = 0.5
+Nr = 200
 r = np.linspace(0, Rmax, Nr)
 dr = r[1] - r[0]
 

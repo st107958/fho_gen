@@ -54,7 +54,7 @@ O2.mass = 5.313525e-26                     # molecular mass, kg
 O2.diameter = 3.46e-10                     # m
 
 # Vibrational constants for O2 (ground electronic state)
-O2.we = [158000]                           # 1/m  (≈ 1580 cm^-1)
+O2.we = [158019]                           # 1/m  (≈ 1580.19 cm^-1)
 O2.wexe = [1198]                           # 1/m  (≈ 11.98 cm^-1)
 O2.weye = [-3.0]                           # 1/m  (малый третий член, часто отрицательный)
 

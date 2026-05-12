@@ -13,7 +13,7 @@ from FHO_FR_VV.p_vv_mm_ij import p_vv, g, gamma
 from FHO_FR_VV.particles_data import *
 
 
-# def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='mc', N=2_00_0, seed=None):
+# def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='mc', N=50000, seed=None):
 #     """
 #     Monte Carlo integration of VV transition probability
 #
@@ -106,12 +106,27 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
     #     raise ValueError("ksi = 0, resonance process")
 
     if method == 'trapez':
-        maxdiv = 5  # макс. кол-во делений: 18
+        maxdiv = 9  # макс. кол-во делений: 18
 
-        # пределы интегрирования
-        eps1 = np.linspace(0, 1, maxdiv)
-        eps2 = np.linspace(0, 1, maxdiv)
+        #пределы интегрирования
+        # eps1 = np.linspace(0, 1, maxdiv)
+        # eps2 = np.linspace(0, 1, maxdiv)
+        # y = np.linspace(0, 1, maxdiv)
+        # v1 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
+        # phi1 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
+        # v2 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
+        # phi2 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
+
+
+        # eps1 = np.linspace(0, 1, maxdiv)
+        # eps2 = np.linspace(0, 1, maxdiv)
+        eps1 = np.linspace(0, 0.5, maxdiv)
+        eps2 = np.linspace(0, 0.5, maxdiv)
         y = np.linspace(0, 1, maxdiv)
+        # v1 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
+        # phi1 = np.linspace(0, 2*np.pi, maxdiv)
+        # v2 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
+        # phi2 = np.linspace(0, 2*np.pi, maxdiv)
         v1 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
         phi1 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
         v2 = np.linspace(-np.pi/2, np.pi/2, maxdiv)
@@ -122,8 +137,8 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
 
         # print('eps1 grid shape', EPS1.shape)
 
-        # mask = (EPS1 + EPS2) <= (1-np.power(Y, 2))/(2*(1-np.power(Y, 2)/2))
-        mask = (EPS1 + EPS2) <= 1/2
+        mask = (EPS1 + EPS2) <= (1-np.power(Y, 2))/(2*(1-np.power(Y, 2)/2))
+        # mask = (EPS1 + EPS2) <= 1/2
         #############################################
 
         EPS1_filtered = EPS1[mask]
@@ -134,6 +149,7 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
         V2_filtered = V2[mask]
         PHI2_filtered = PHI2[mask]
 
+        weight = np.cos(V1_filtered) * np.cos(V2_filtered)
 
         # print('eps1_filtered grid shape', EPS1_restored.shape)
 
@@ -141,6 +157,7 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
                  V1_filtered, PHI1_filtered, V2_filtered, PHI2_filtered)
 
         # print('F', F.shape)
+        F *= weight
 
         F_ = np.zeros_like(EPS1)  # Исходная форма (maxdiv, maxdiv, maxdiv, maxdiv, maxdiv, maxdiv, maxdiv)
         F_[mask] = F  # допустимые точки
@@ -163,6 +180,7 @@ def p_vv_int(m1, m2, i1, f1, i2, f2, E, method='trapez'):
             phi2, axis=0)
 
         result = result / (np.pi ** 4)
+
 
     return result
 

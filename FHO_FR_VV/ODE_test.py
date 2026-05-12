@@ -315,9 +315,14 @@ SIGMA_PUMP = 46e-4       # 46 um
 SIGMA_PROBE = 46e-4      # 46 um (или 65e-4 как sigma_meas)
 RUN_DIFFUSION_ONLY_CHECK = False
 
+# # радиальная сетка
+# R_max = 0.03       # см = 300 мкм (чуть больше пучка)
+# nr = 51
+# r = np.linspace(0, R_max, nr)
+
 # радиальная сетка
-R_max = 0.03       # см = 300 мкм (чуть больше пучка)
-nr = 51
+R_max = 0.5       # см = 300 мкм (чуть больше пучка)
+nr = 200
 r = np.linspace(0, R_max, nr)
 
 # временная сетка (как в эксперименте)

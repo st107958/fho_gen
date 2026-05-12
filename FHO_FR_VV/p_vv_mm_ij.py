@@ -70,7 +70,7 @@ def g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u):
 
     # --- СКАЛЯРНЫЙ РЕЖИМ (quad) ---
     if np.isscalar(ksi):
-        if abs(ksi) < 1e-30:
+        if abs(ksi) < 1e-50:
             return base
         if abs(ksi) > 50:
             return 0.0
@@ -98,6 +98,86 @@ def g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u):
     result[mask_mid] = base[mask_mid] * (x / np.sinh(x))**2
 
     return result
+
+
+
+
+# def g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u):
+#
+#     gamma_val = gamma(eps1, eps2, y, v1, phi1, v2, phi2)
+#     M = 1.0 / 16.0  # для O₂-O₂. Для других молекул пересчитать!
+#     geom = (np.cos(v1) * np.cos(phi1) * np.cos(v2) * np.cos(phi2)) ** 2
+#     vel_factor = (gamma_val * alpha * u * 0.5) ** 2
+#     freq_factor = 1.0 / (omega1 * omega2)
+#
+#     xi = 2.0 * np.pi * abs(omega1 - omega2) / (alpha * u * gamma_val)
+#
+#     if xi > 100:
+#         sech_factor = 0.0
+#     elif xi < 1e-30:
+#         sech_factor = 1.0
+#     else:
+#         sech_factor = (1.0 / np.cosh(xi)) ** 2
+#
+#     G = M * geom * vel_factor * freq_factor * sech_factor
+#
+#     return G
+
+# def g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u):
+#     """
+#     G based on Kelley (1972) — с учётом углов и gamma, как у Адамовича
+#     """
+#     from FHO_FR_VV.constants import h_red as hbar
+#
+#     gamma_val = gamma(eps1, eps2, y, v1, phi1, v2, phi2)
+#
+#     # Массовый множитель для O₂-O₂ (c1=c2=0.5, m̄=16/2=8 amu, μ1=μ2=8 amu)
+#     # M = (0.5^2 * 0.5^2) * (8^2) / (8*8) = 0.0625 * 64 / 64 = 1/16 = 0.0625
+#     M = 1.0 / 16.0  # для O₂-O₂. Для других молекул пересчитать!
+#
+#     # Геометрия
+#     geom = (np.cos(v1) * np.cos(phi1) * np.cos(v2) * np.cos(phi2)) ** 2
+#
+#     # Скоростной множитель
+#     vel_factor = (gamma_val * alpha * u * 0.5) ** 2
+#
+#     # Частотный множитель
+#     freq_factor = 1.0 / (omega1 * omega2)
+#
+#     # Аргумент для секанса (используем переданный ksi? или пересчитаем?)
+#     # В формуле Kelley аргумент: 2 * pi * |omega1-omega2| / (alpha * u * gamma_val)
+#     # У тебя в p_vv() ksi считается как pi*(omega1-omega2)/(alpha*u) — без gamma и без 2
+#
+#     # Пересчитаем правильно:
+#     with np.errstate(divide='ignore', invalid='ignore'):
+#         xi = 2.0 * np.pi * np.abs(omega1 - omega2) / (alpha * u * gamma_val)
+#
+#     # Защита от деления на ноль и переполнения для массивов
+#     # Создаём массив sech_factor той же формы, что и xi
+#     sech_factor = np.ones_like(xi, dtype=float)
+#
+#     # Маска для больших xi (экспоненциальное затухание)
+#     mask_large = xi > 100
+#     # Маска для очень малых xi (sech -> 1)
+#     mask_small = xi < 1e-30
+#     # Маска для нормальных значений
+#     mask_mid = ~(mask_large | mask_small)
+#
+#     sech_factor[mask_large] = 0.0
+#     sech_factor[mask_small] = 1.0
+#
+#     x = xi[mask_mid]
+#     sech_factor[mask_mid] = (1.0 / np.cosh(x)) ** 2
+#
+#     # Полный G
+#     G = geom * vel_factor * freq_factor * sech_factor # * M
+#
+#     # Если где-то nan/ inf — зануляем
+#     G = np.nan_to_num(G, nan=0.0, posinf=0.0, neginf=0.0)
+#
+#     return G
+
+
 
 # безразмерная
 
@@ -148,11 +228,18 @@ def p_vv(m1, m2, i1, f1, i2, f2, E, eps1, eps2, y, v1, phi1, v2, phi2):
     # print("ns2 shape:", np.shape(ns2))
     # print("s:", s, "type:", type(s), "shape:", np.shape(s) if hasattr(s, 'shape') else "scalar")
 
+    # return (np.power(ns1*ns2*g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u), s)
+    #         / (np.power(factorial(s), 2))
+    #         * np.exp(-(2*ns1*g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u) / (s+1))
+    #                  - (np.power(ns1*g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u)/(s+1), 2)
+    #                     / (s+2))))
+
     return (np.power(ns1*ns2*g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u), s)
             / (np.power(factorial(s), 2))
-            * np.exp(-(2*ns1*g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u) / (s+1))
-                     - (np.power(ns1*g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u)/(s+1), 2)
-                        / (s+2))))
+            * np.exp(-(2*np.sqrt(ns1*ns2)*g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u) / (s+1))
+                     - ns1*ns2 * (np.power(g(y, eps1, eps2, v1, phi1, v2, phi2, ksi, omega1, omega2, u)/(s+1), 2)
+                        / (s+2))))  # * (1/4)
+
 
 # print('G:', g(0.2, 0.2, 0.2, pi/4, pi/4, pi/4, pi/4, -0.2053596293420575,
 #          425390684400060.25 , 650224277299828.6, 13000))
