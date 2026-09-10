@@ -90,6 +90,9 @@ def _rvv_executor(max_workers: int | None, m1, m2):
 
 
 if __name__ == "__main__":
+    print(f"Доступно ядер CPU: {os.cpu_count()}")
+    print(f"Запрошено workers: {RVV_FAST_WORKERS}")
+    print(f"Максимально возможное: {mp.cpu_count()}")
     t0_rvv = time.time()
     rows_rvv: list[dict] = []
     with _rvv_executor(RVV_FAST_WORKERS, M1, M2) as ex:
@@ -112,6 +115,6 @@ if __name__ == "__main__":
         f"R_VV_fast: уникальных переходов {len(quad_rvv)}, строк {len(df_dataset_rvv_fast)}, "
         f"время {elapsed_rvv:.2f} s, workers={RVV_FAST_WORKERS!r}"
     )
-    df_dataset_rvv_fast.to_csv(DATASET_RVV_FAST_PATH, index=False)
-    print(f"Сохранено: {DATASET_RVV_FAST_PATH.resolve()}")
+    # df_dataset_rvv_fast.to_csv(DATASET_RVV_FAST_PATH, index=False)
+    # print(f"Сохранено: {DATASET_RVV_FAST_PATH.resolve()}")
     df_dataset_rvv_fast.head()
